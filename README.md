@@ -38,7 +38,36 @@ Public accounts, notifications, waitlists, reviews, fines, multiple branches, an
 - A modular monolith in a monorepo, with separate web and API applications.
 - Server-side admin sessions carried in secure, HTTP-only cookies.
 
-No application framework or infrastructure has been scaffolded yet.
+Phase 1 scaffolds the Angular and NestJS applications, PostgreSQL development configuration, Prisma without domain models, and repository quality tooling. Domain features begin in Phase 2.
+
+## Development foundation
+
+Prerequisites:
+
+- Node.js 22.12 or newer;
+- npm 10 or newer;
+- Docker with Docker Compose.
+
+Initial setup:
+
+```bash
+cp .env.example .env
+npm install
+docker compose up -d postgres
+```
+
+Common commands:
+
+```bash
+npm run build
+npm run lint
+npm test
+npm run test:e2e
+npm run start --workspace @booknest/web
+npm run start:dev --workspace @booknest/api
+```
+
+The backend exposes `GET /api/v1/health`, which returns `{ "status": "ok" }`. Prisma is configured for PostgreSQL but intentionally contains no domain models or migrations yet.
 
 ## Core lifecycle
 
