@@ -38,7 +38,7 @@ Public accounts, notifications, waitlists, reviews, fines, multiple branches, an
 - A modular monolith in a monorepo, with separate web and API applications.
 - Server-side admin sessions carried in secure, HTTP-only cookies.
 
-Phase 1 scaffolds the Angular and NestJS applications, PostgreSQL development configuration, Prisma without domain models, and repository quality tooling. Domain features begin in Phase 2.
+Phase 1 scaffolds the Angular and NestJS applications, PostgreSQL development configuration, and repository quality tooling. Phase 2A adds the catalog schema and public read-only API; reservation and administration features remain deferred.
 
 ## Development foundation
 
@@ -67,7 +67,7 @@ npm run start --workspace @booknest/web
 npm run start:dev --workspace @booknest/api
 ```
 
-The backend exposes `GET /api/v1/health`, which returns `{ "status": "ok" }`. Prisma is configured for PostgreSQL but intentionally contains no domain models or migrations yet.
+The backend exposes `GET /api/v1/health`, which returns `{ "status": "ok" }`. The public catalog API provides `GET /api/v1/books`, `GET /api/v1/books/:id`, and `GET /api/v1/genres`.
 
 ## Core lifecycle
 

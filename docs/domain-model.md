@@ -13,12 +13,11 @@ Book availability and reservation history are stored separately but changed toge
 - `id`
 - `title`
 - `author`
-- `description`
-- `isbn`, optional
-- `publicationYear`, optional
+- `description`, optional
 - `coverUrl`, optional
 - `status`: `AVAILABLE`, `RESERVED`, or `BORROWED`
-- `archivedAt`, optional
+- `genreId`
+- `isArchived`
 - `createdAt`
 - `updatedAt`
 
@@ -30,13 +29,9 @@ A book with reservation history should be archived rather than physically delete
 - `name`, unique
 - `slug`, unique
 - `createdAt`
+- `updatedAt`
 
-### BookGenre
-
-- `bookId`
-- `genreId`
-
-`BookGenre` models the many-to-many relationship between books and genres.
+Each book belongs to one genre. A genre may contain many physical books.
 
 ### Reservation
 
@@ -78,7 +73,7 @@ The MVP has no pending or approval status. It also has no `cancellationType` or 
 
 ```text
 Book 1 -------- many Reservation
-Book many ----- many Genre (through BookGenre)
+Genre 1 ------- many Book
 AdminUser 1 --- many AdminSession
 ```
 
