@@ -10,8 +10,8 @@ import {
   Min,
 } from 'class-validator';
 
-const trimString = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
+const trimString = ({ value: inputValue }: { value: unknown }): unknown =>
+  typeof inputValue === 'string' ? inputValue.trim() : inputValue;
 
 export class ListBooksQueryDto {
   @Type(() => Number)

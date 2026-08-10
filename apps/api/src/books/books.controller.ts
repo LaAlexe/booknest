@@ -7,14 +7,14 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Get()
-  findAll(@Query() query: ListBooksQueryDto): Promise<PaginatedBooks> {
-    return this.booksService.findAll(query);
+  findAll(@Query() listBooksQuery: ListBooksQueryDto): Promise<PaginatedBooks> {
+    return this.booksService.findAll(listBooksQuery);
   }
 
   @Get(':id')
   findOne(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ): Promise<PublicBook> {
-    return this.booksService.findOne(id);
+    return this.booksService.findOne(bookId);
   }
 }

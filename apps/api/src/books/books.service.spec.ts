@@ -1,20 +1,17 @@
 import { NotFoundException } from '@nestjs/common';
 import { BookStatus } from '@prisma/client';
+import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../database/prisma.service';
 import { BooksService, PublicBook } from './books.service';
 import { ListBooksQueryDto } from './dto/list-books-query.dto';
 
 describe('BooksService', () => {
-  const findMany = jest.fn();
-  const count = jest.fn();
-  const findFirst = jest.fn();
-  const transaction = jest.fn();
-  const prisma = {
-    book: { findMany, count, findFirst },
-    $transaction: transaction,
-  } as unknown as PrismaService;
-  const service = new BooksService(prisma);
-  const book: PublicBook = {
+  const findManyBooks = jest.fn();
+  const countBooks = jest.fn();
+  const findFirstBook = jest.fn();
+  const runTransaction = jest.fn();
+  let booksService: BooksService;
+  const publicBook: PublicBook = {
     id: '6c06bb7b-5294-4a22-b37c-d69214c08062',
     title: 'The Hobbit',
     author: 'J. R. R. Tolkien',
@@ -30,38 +27,55 @@ describe('BooksService', () => {
     },
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const testingModule: TestingModule = await Test.createTestingModule({
+      providers: [
+        BooksService,
+        {
+          provide: PrismaService,
+          useValue: {
+            book: {
+              findMany: findManyBooks,
+              count: countBooks,
+              findFirst: findFirstBook,
+            },
+            $transaction: runTransaction,
+          },
+        },
+      ],
+    }).compile();
+    booksService = testingModule.get(BooksService);
     jest.clearAllMocks();
-    findMany.mockReturnValue(Promise.resolve([]));
-    count.mockReturnValue(Promise.resolve(0));
+    findManyBooks.mockResolvedValue([]);
+    countBooks.mockResolvedValue(0);
   });
 
   it('lists books with pagination metadata and excludes archived books', async () => {
-    transaction.mockResolvedValue([[book], 1]);
+    runTransaction.mockResolvedValue([[publicBook], 1]);
 
-    const result = await service.findAll(new ListBooksQueryDto());
+    const catalogPage = await booksService.findAll(new ListBooksQueryDto());
 
-    expect(findMany).toHaveBeenCalledWith(
+    expect(findManyBooks).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { isArchived: false },
         skip: 0,
         take: 20,
       }),
     );
-    expect(result).toEqual({
-      data: [book],
+    expect(catalogPage).toEqual({
+      data: [publicBook],
       meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
     });
   });
 
   it('filters by genre slug', async () => {
-    transaction.mockResolvedValue([[], 0]);
+    runTransaction.mockResolvedValue([[], 0]);
 
-    await service.findAll(
+    await booksService.findAll(
       Object.assign(new ListBooksQueryDto(), { genre: 'fantasy' }),
     );
 
-    expect(findMany).toHaveBeenCalledWith(
+    expect(findManyBooks).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           isArchived: false,
@@ -72,13 +86,13 @@ describe('BooksService', () => {
   });
 
   it('searches title and author case-insensitively', async () => {
-    transaction.mockResolvedValue([[], 0]);
+    runTransaction.mockResolvedValue([[], 0]);
 
-    await service.findAll(
+    await booksService.findAll(
       Object.assign(new ListBooksQueryDto(), { q: 'tolkien' }),
     );
 
-    expect(findMany).toHaveBeenCalledWith(
+    expect(findManyBooks).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           isArchived: false,
@@ -92,18 +106,18 @@ describe('BooksService', () => {
   });
 
   it('applies page and page-size offsets', async () => {
-    transaction.mockResolvedValue([[], 45]);
-    const query = Object.assign(new ListBooksQueryDto(), {
+    runTransaction.mockResolvedValue([[], 45]);
+    const listBooksQuery = Object.assign(new ListBooksQueryDto(), {
       page: 3,
       pageSize: 10,
     });
 
-    const result = await service.findAll(query);
+    const catalogPage = await booksService.findAll(listBooksQuery);
 
-    expect(findMany).toHaveBeenCalledWith(
+    expect(findManyBooks).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 20, take: 10 }),
     );
-    expect(result.meta).toEqual({
+    expect(catalogPage.meta).toEqual({
       page: 3,
       pageSize: 10,
       total: 45,
@@ -112,20 +126,22 @@ describe('BooksService', () => {
   });
 
   it('returns a non-archived book by id', async () => {
-    findFirst.mockResolvedValue(book);
+    findFirstBook.mockResolvedValue(publicBook);
 
-    await expect(service.findOne(book.id)).resolves.toEqual(book);
-    expect(findFirst).toHaveBeenCalledWith(
+    await expect(booksService.findOne(publicBook.id)).resolves.toEqual(
+      publicBook,
+    );
+    expect(findFirstBook).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: book.id, isArchived: false },
+        where: { id: publicBook.id, isArchived: false },
       }),
     );
   });
 
   it('does not expose an archived or missing book by id', async () => {
-    findFirst.mockResolvedValue(null);
+    findFirstBook.mockResolvedValue(null);
 
-    await expect(service.findOne(book.id)).rejects.toBeInstanceOf(
+    await expect(booksService.findOne(publicBook.id)).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });

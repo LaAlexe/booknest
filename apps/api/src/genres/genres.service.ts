@@ -14,10 +14,10 @@ export type PublicGenre = Prisma.GenreGetPayload<{
 
 @Injectable()
 export class GenresService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   findAll(): Promise<PublicGenre[]> {
-    return this.prisma.genre.findMany({
+    return this.prismaService.genre.findMany({
       select: publicGenreSelect,
       orderBy: { name: 'asc' },
     });

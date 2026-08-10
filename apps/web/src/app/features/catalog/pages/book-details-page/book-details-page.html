@@ -1,0 +1,33 @@
+<a class="back" routerLink="/">← Back to catalog</a>
+
+@if (isLoading()) {
+<div class="state" role="status">Loading book…</div>
+} @else if (hasLoadError()) {
+<div class="state state--error" role="alert">
+  We couldn't load this book. It may no longer be available in the catalog.
+</div>
+} @else if (book(); as selectedBook) {
+<article class="details">
+  <div>
+    @if (selectedBook.coverUrl) {
+    <img
+      [src]="selectedBook.coverUrl"
+      [alt]="'Cover of ' + selectedBook.title"
+    />
+    } @else {
+    <div class="cover-placeholder" aria-hidden="true">BN</div>
+    }
+  </div>
+  <div>
+    <app-availability-badge [status]="selectedBook.status" />
+    <h1>{{ selectedBook.title }}</h1>
+    <p class="author">by {{ selectedBook.author }}</p>
+    <p class="genre">{{ selectedBook.genre.name }}</p>
+    @if (selectedBook.description) {
+    <p class="description">{{ selectedBook.description }}</p>
+    } @else {
+    <p class="description muted">No description is available for this book.</p>
+    }
+  </div>
+</article>
+}

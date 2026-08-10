@@ -1,0 +1,19 @@
+.badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+}
+.badge--available {
+  background: #d9f2e6;
+  color: #145b43;
+}
+.badge--reserved {
+  background: #fff0c2;
+  color: #755500;
+}
+.badge--borrowed {
+  background: #e8e9ed;
+  color: #4d515c;
+}

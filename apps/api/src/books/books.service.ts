@@ -37,48 +37,54 @@ export interface PaginatedBooks {
 
 @Injectable()
 export class BooksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
-  async findAll(query: ListBooksQueryDto): Promise<PaginatedBooks> {
-    const where: Prisma.BookWhereInput = {
+  async findAll(listBooksQuery: ListBooksQueryDto): Promise<PaginatedBooks> {
+    const bookFilters: Prisma.BookWhereInput = {
       isArchived: false,
-      ...(query.genre ? { genre: { slug: query.genre } } : {}),
-      ...(query.q
+      ...(listBooksQuery.genre
+        ? { genre: { slug: listBooksQuery.genre } }
+        : {}),
+      ...(listBooksQuery.q
         ? {
             OR: [
-              { title: { contains: query.q, mode: 'insensitive' } },
-              { author: { contains: query.q, mode: 'insensitive' } },
+              {
+                title: { contains: listBooksQuery.q, mode: 'insensitive' },
+              },
+              {
+                author: { contains: listBooksQuery.q, mode: 'insensitive' },
+              },
             ],
           }
         : {}),
     };
-    const skip = (query.page - 1) * query.pageSize;
+    const booksToSkip = (listBooksQuery.page - 1) * listBooksQuery.pageSize;
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.book.findMany({
-        where,
+    const [books, totalBooks] = await this.prismaService.$transaction([
+      this.prismaService.book.findMany({
+        where: bookFilters,
         select: publicBookSelect,
         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
-        skip,
-        take: query.pageSize,
+        skip: booksToSkip,
+        take: listBooksQuery.pageSize,
       }),
-      this.prisma.book.count({ where }),
+      this.prismaService.book.count({ where: bookFilters }),
     ]);
 
     return {
-      data,
+      data: books,
       meta: {
-        page: query.page,
-        pageSize: query.pageSize,
-        total,
-        totalPages: Math.ceil(total / query.pageSize),
+        page: listBooksQuery.page,
+        pageSize: listBooksQuery.pageSize,
+        total: totalBooks,
+        totalPages: Math.ceil(totalBooks / listBooksQuery.pageSize),
       },
     };
   }
 
-  async findOne(id: string): Promise<PublicBook> {
-    const book = await this.prisma.book.findFirst({
-      where: { id, isArchived: false },
+  async findOne(bookId: string): Promise<PublicBook> {
+    const book = await this.prismaService.book.findFirst({
+      where: { id: bookId, isArchived: false },
       select: publicBookSelect,
     });
 

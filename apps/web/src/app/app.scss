@@ -1,0 +1,21 @@
+.site-header {
+  align-items: baseline;
+  background: #173f35;
+  color: #eaf4ef;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem max(1rem, calc((100% - 72rem) / 2));
+}
+
+.brand {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.page-shell {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 2rem 1rem 4rem;
+}

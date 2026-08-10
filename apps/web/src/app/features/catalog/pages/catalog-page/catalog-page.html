@@ -1,0 +1,86 @@
+<section>
+  <div class="heading">
+    <div>
+      <p class="eyebrow">Explore the shelves</p>
+      <h1>Book catalog</h1>
+    </div>
+    @if (catalogPage()) {
+    <p>{{ bookCountLabel() }}</p>
+    }
+  </div>
+
+  <form class="filters" (ngSubmit)="applyFilters()">
+    <label>
+      Search by title or author
+      <input
+        [formControl]="searchControl"
+        type="search"
+        placeholder="e.g. Tolkien"
+      />
+    </label>
+    <label>
+      Genre
+      <select [formControl]="genreControl" (change)="applyFilters()">
+        <option value="">All genres</option>
+        @for (availableGenre of availableGenres(); track availableGenre.id) {
+        <option [value]="availableGenre.slug">{{ availableGenre.name }}</option>
+        }
+      </select>
+    </label>
+    <button type="submit">Search</button>
+  </form>
+
+  @if (isLoading()) {
+  <div class="state" role="status">Loading books…</div>
+  } @else if (hasLoadError()) {
+  <div class="state state--error" role="alert">
+    We couldn't load the catalog. Please try again.
+  </div>
+  } @else if (catalogPage(); as currentCatalogPage) { @if
+  (currentCatalogPage.data.length === 0) {
+  <div class="state">
+    <h2>No books found</h2>
+    <p>Try changing your search or genre filter.</p>
+  </div>
+  } @else {
+  <div class="book-grid">
+    @for (book of currentCatalogPage.data; track book.id) {
+    <article class="book-card">
+      @if (book.coverUrl) {
+      <img [src]="book.coverUrl" [alt]="'Cover of ' + book.title" />
+      } @else {
+      <div class="cover-placeholder" aria-hidden="true">BN</div>
+      }
+      <div class="book-card__body">
+        <app-availability-badge [status]="book.status" />
+        <h2><a [routerLink]="['/books', book.id]">{{ book.title }}</a></h2>
+        <p class="author">{{ book.author }}</p>
+        <p class="genre">{{ book.genre.name }}</p>
+      </div>
+    </article>
+    }
+  </div>
+
+  @if (shouldDisplayPagination()) {
+  <nav class="pagination" aria-label="Catalog pages">
+    <button
+      type="button"
+      [disabled]="currentCatalogPage.meta.page === 1"
+      (click)="goToPage(currentCatalogPage.meta.page - 1)"
+    >
+      Previous
+    </button>
+    <span
+      >Page {{ currentCatalogPage.meta.page }} of {{
+      currentCatalogPage.meta.totalPages }}</span
+    >
+    <button
+      type="button"
+      [disabled]="currentCatalogPage.meta.page === currentCatalogPage.meta.totalPages"
+      (click)="goToPage(currentCatalogPage.meta.page + 1)"
+    >
+      Next
+    </button>
+  </nav>
+  } } }
+</section>

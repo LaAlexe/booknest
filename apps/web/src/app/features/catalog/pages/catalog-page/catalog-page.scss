@@ -1,0 +1,131 @@
+.heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.heading h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  margin: 0.15rem 0;
+}
+.eyebrow {
+  color: #28705c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.filters {
+  align-items: end;
+  background: #fff;
+  border: 1px solid #dfe4df;
+  border-radius: 0.75rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 2fr 1fr auto;
+  margin-bottom: 2rem;
+  padding: 1rem;
+}
+label {
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 650;
+  gap: 0.35rem;
+}
+input,
+select {
+  border: 1px solid #aeb9b3;
+  border-radius: 0.4rem;
+  min-height: 2.65rem;
+  padding: 0.55rem 0.7rem;
+  width: 100%;
+}
+button {
+  background: #17634e;
+  border: 0;
+  border-radius: 0.4rem;
+  color: white;
+  cursor: pointer;
+  min-height: 2.65rem;
+  padding: 0.55rem 1rem;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.book-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+}
+.book-card {
+  background: #fff;
+  border: 1px solid #dfe4df;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.book-card img,
+.cover-placeholder {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  width: 100%;
+}
+.cover-placeholder {
+  align-items: center;
+  background: #dfe9e4;
+  color: #578073;
+  display: flex;
+  font-size: 2rem;
+  font-weight: 800;
+  justify-content: center;
+}
+.book-card__body {
+  padding: 1rem;
+}
+.book-card h2 {
+  font-size: 1.2rem;
+  margin: 0.75rem 0 0.25rem;
+}
+.book-card h2 a {
+  color: #17211e;
+  text-decoration: none;
+}
+.book-card h2 a:hover {
+  text-decoration: underline;
+}
+.author {
+  margin: 0;
+}
+.genre {
+  color: #63716c;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+.state {
+  background: #fff;
+  border: 1px solid #dfe4df;
+  border-radius: 0.75rem;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+.state--error {
+  border-color: #e6b4b4;
+  color: #862b2b;
+}
+.pagination {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+@media (max-width: 42rem) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .heading {
+    align-items: start;
+    flex-direction: column;
+  }
+}
