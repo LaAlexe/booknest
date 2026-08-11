@@ -53,18 +53,37 @@ Initial setup:
 ```bash
 cp .env.example .env
 npm install
+```
+
+Start local development in this order:
+
+1. Start PostgreSQL:
+
+```bash
 docker compose up -d postgres
 ```
 
-Common commands:
+2. Start the NestJS API in a second terminal. It listens on `http://localhost:3000/api/v1`:
+
+```bash
+npm run start:dev --workspace @booknest/api
+```
+
+3. Start the Angular development server in a third terminal:
+
+```bash
+npm run start --workspace @booknest/web
+```
+
+Open `http://localhost:4200`. The Angular development server automatically proxies relative `/api` requests to the NestJS API on port `3000`; no frontend API URL configuration or browser CORS setup is required for local development.
+
+Quality commands:
 
 ```bash
 npm run build
 npm run lint
 npm test
 npm run test:e2e
-npm run start --workspace @booknest/web
-npm run start:dev --workspace @booknest/api
 ```
 
 The backend exposes `GET /api/v1/health`, which returns `{ "status": "ok" }`. The public catalog API provides `GET /api/v1/books`, `GET /api/v1/books/:id`, and `GET /api/v1/genres`.
