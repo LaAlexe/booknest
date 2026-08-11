@@ -1,0 +1,21 @@
+nav {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+button {
+  background: #17634e;
+  border: 0;
+  border-radius: 0.4rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.55rem 0.9rem;
+}
+
+button:disabled {
+  opacity: 0.6;
+}

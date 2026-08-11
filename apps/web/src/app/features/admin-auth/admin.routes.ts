@@ -13,6 +13,16 @@ export const ADMIN_ROUTES: Routes = [
     title: 'Admin login | BookNest',
   },
   {
+    path: 'reservations',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('../admin-reservations/pages/admin-reservations-page/admin-reservations-page').then(
+        (adminReservationsModule) =>
+          adminReservationsModule.AdminReservationsPage,
+      ),
+    title: 'Manage reservations | BookNest',
+  },
+  {
     path: 'books/new',
     canActivate: [adminAuthGuard],
     loadComponent: () =>

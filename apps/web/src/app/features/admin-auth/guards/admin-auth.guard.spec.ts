@@ -32,6 +32,11 @@ describe('admin route guards', () => {
             canActivate: [adminAuthGuard],
             component: GuardTestPage,
           },
+          {
+            path: 'admin/reservations',
+            canActivate: [adminAuthGuard],
+            component: GuardTestPage,
+          },
         ]),
         { provide: AdminAuthStore, useValue: { loadCurrentAdmin } },
       ],
@@ -62,6 +67,14 @@ describe('admin route guards', () => {
     loadCurrentAdmin.mockReturnValue(of(null));
 
     await router.navigateByUrl('/admin/books');
+
+    expect(router.url).toBe('/admin/login');
+  });
+
+  it('redirects unauthenticated reservation management to login', async () => {
+    loadCurrentAdmin.mockReturnValue(of(null));
+
+    await router.navigateByUrl('/admin/reservations');
 
     expect(router.url).toBe('/admin/login');
   });

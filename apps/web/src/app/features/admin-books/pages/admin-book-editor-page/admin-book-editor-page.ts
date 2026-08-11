@@ -2,6 +2,7 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin, Observable, of } from 'rxjs';
+import { AdminNavigation } from '../../../../shared/components/admin-navigation/admin-navigation';
 import { Genre } from '../../../catalog/models/catalog.models';
 import { CatalogApiService } from '../../../catalog/services/catalog-api.service';
 import { AdminBookForm } from '../../components/admin-book-form/admin-book-form';
@@ -10,7 +11,7 @@ import { AdminBooksApiService } from '../../services/admin-books-api.service';
 
 @Component({
   selector: 'app-admin-book-editor-page',
-  imports: [AdminBookForm, RouterLink],
+  imports: [AdminBookForm, AdminNavigation, RouterLink],
   templateUrl: './admin-book-editor-page.html',
   styleUrl: './admin-book-editor-page.scss',
 })

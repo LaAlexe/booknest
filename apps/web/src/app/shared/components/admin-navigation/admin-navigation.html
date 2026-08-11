@@ -1,0 +1,8 @@
+<nav aria-label="Administration">
+  <a routerLink="/admin">Admin</a>
+  <a routerLink="/admin/books">Books</a>
+  <a routerLink="/admin/reservations">Reservations</a>
+  <button type="button" [disabled]="isLoggingOut()" (click)="logout()">
+    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
+  </button>
+</nav>

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { AdminAuthStore } from '../../../admin-auth/services/admin-auth.store';
 import { AdminBook } from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
 import { AdminBooksPage } from './admin-books-page';
@@ -31,6 +32,10 @@ describe('AdminBooksPage', () => {
       imports: [AdminBooksPage],
       providers: [
         provideRouter([]),
+        {
+          provide: AdminAuthStore,
+          useValue: { logout: vi.fn(() => of({ success: true })) },
+        },
         {
           provide: AdminBooksApiService,
           useValue: {
@@ -68,7 +73,7 @@ describe('AdminBooksPage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     const booksElement = booksFixture.nativeElement as HTMLElement;
 
-    booksElement.querySelector<HTMLButtonElement>('button')?.click();
+    booksElement.querySelector<HTMLButtonElement>('.actions button')?.click();
     booksFixture.detectChanges();
 
     expect(archiveBookSpy).toHaveBeenCalledWith(availableBook.id);
@@ -82,7 +87,7 @@ describe('AdminBooksPage', () => {
       const booksElement = booksFixture.nativeElement as HTMLElement;
 
       expect(booksElement.textContent).toContain('Unavailable');
-      expect(booksElement.querySelector('button')).toBeNull();
+      expect(booksElement.querySelector('.actions button')).toBeNull();
     },
   );
 });

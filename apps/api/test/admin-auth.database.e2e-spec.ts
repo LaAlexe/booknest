@@ -126,6 +126,12 @@ describe('Admin authentication (database e2e)', () => {
       .expect(200);
   });
 
+  it('protects admin reservation management', async () => {
+    await request(apiApplication.getHttpServer())
+      .get('/api/v1/admin/reservations')
+      .expect(401);
+  });
+
   function login(): request.Test {
     return request(apiApplication.getHttpServer())
       .post('/api/v1/admin/auth/login')

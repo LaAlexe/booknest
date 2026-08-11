@@ -2,12 +2,13 @@ import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { AdminNavigation } from '../../../../shared/components/admin-navigation/admin-navigation';
 import { AdminBook } from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
 
 @Component({
   selector: 'app-admin-books-page',
-  imports: [RouterLink],
+  imports: [AdminNavigation, RouterLink],
   templateUrl: './admin-books-page.html',
   styleUrl: './admin-books-page.scss',
 })

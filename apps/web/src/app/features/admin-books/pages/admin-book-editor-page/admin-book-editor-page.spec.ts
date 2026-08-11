@@ -7,6 +7,7 @@ import {
   Router,
 } from '@angular/router';
 import { of } from 'rxjs';
+import { AdminAuthStore } from '../../../admin-auth/services/admin-auth.store';
 import { CatalogApiService } from '../../../catalog/services/catalog-api.service';
 import { AdminBook } from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
@@ -43,6 +44,10 @@ describe('AdminBookEditorPage', () => {
             component: AdminBookEditorPage,
           },
         ]),
+        {
+          provide: AdminAuthStore,
+          useValue: { logout: vi.fn(() => of({ success: true })) },
+        },
         {
           provide: ActivatedRoute,
           useValue: {

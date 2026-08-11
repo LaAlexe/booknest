@@ -1,0 +1,153 @@
+.heading,
+.filters,
+.pagination,
+.actions {
+  align-items: center;
+  display: flex;
+}
+
+.heading {
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  color: #28705c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0.25rem 0 0;
+}
+
+.filters {
+  background: #fff;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+}
+
+label {
+  display: grid;
+  font-weight: 600;
+  gap: 0.3rem;
+}
+
+input,
+select {
+  border: 1px solid #b8c2bd;
+  border-radius: 0.35rem;
+  min-width: 12rem;
+  padding: 0.5rem;
+}
+
+button {
+  background: #17634e;
+  border: 0;
+  border-radius: 0.4rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.55rem 0.8rem;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.secondary-action {
+  background: #6b3939;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  background: #fff;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border-bottom: 1px solid #dfe4df;
+  padding: 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dates {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 12rem;
+}
+
+.actions {
+  gap: 0.5rem;
+}
+
+.status-badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+}
+
+.status-badge--reserved {
+  background: #fff0bf;
+  color: #725500;
+}
+
+.status-badge--borrowed {
+  background: #dce8ff;
+  color: #244d86;
+}
+
+.status-badge--completed {
+  background: #dcefe5;
+  color: #246046;
+}
+
+.status-badge--cancelled {
+  background: #ececec;
+  color: #555;
+}
+
+.muted {
+  color: #68736f;
+}
+
+.state,
+.message {
+  background: #fff;
+  border: 1px solid #dfe4df;
+  border-radius: 0.6rem;
+  padding: 1rem;
+}
+
+.state {
+  padding: 2rem;
+  text-align: center;
+}
+
+.state--error,
+.message--error {
+  color: #862b2b;
+}
+
+.message--warning {
+  color: #705400;
+}
+
+.pagination {
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+}

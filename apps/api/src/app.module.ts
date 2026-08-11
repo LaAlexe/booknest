@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import Joi from 'joi';
 import { AdminAuthModule } from './admin-auth/admin-auth.module';
 import { AdminBooksModule } from './admin-books/admin-books.module';
+import { AdminReservationsModule } from './admin-reservations/admin-reservations.module';
 import { BooksModule } from './books/books.module';
 import { DatabaseModule } from './database/database.module';
 import { GenresModule } from './genres/genres.module';
@@ -31,6 +32,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     ReservationsModule,
     AdminAuthModule,
     AdminBooksModule,
+    AdminReservationsModule,
   ],
   controllers: [HealthController],
 })

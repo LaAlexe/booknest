@@ -1,0 +1,162 @@
+<section>
+  <app-admin-navigation />
+  <div class="heading">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Reservations</h1>
+      @if (!isLoading()) {
+      <span class="muted">{{ totalReservations() }} total</span>
+      }
+    </div>
+  </div>
+
+  <form class="filters" (ngSubmit)="applyFilters()">
+    <label>
+      Search by book
+      <input
+        type="search"
+        name="reservation-search"
+        maxlength="255"
+        [ngModel]="searchText()"
+        (ngModelChange)="searchText.set($event)"
+      />
+    </label>
+    <label>
+      Status
+      <select
+        name="reservation-status"
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="selectedStatus.set($event)"
+      >
+        <option value="">All statuses</option>
+        <option value="RESERVED">Reserved</option>
+        <option value="BORROWED">Borrowed</option>
+        <option value="COMPLETED">Completed</option>
+        <option value="CANCELLED">Cancelled</option>
+      </select>
+    </label>
+    <button type="submit">Apply filters</button>
+  </form>
+
+  @if (isLoading()) {
+  <div class="state" role="status">Loading reservations…</div>
+  } @else if (hasLoadError()) {
+  <div class="state state--error" role="alert">
+    We couldn't load the reservations.
+  </div>
+  } @else if (reservations().length === 0) {
+  <div class="state">No reservations match these filters.</div>
+  } @else { @if (hasConflict()) {
+  <p class="message message--warning" role="alert">
+    This reservation changed before the action completed. Its current state has
+    been reloaded.
+  </p>
+  } @if (hasActionError()) {
+  <p class="message message--error" role="alert">
+    We couldn't update the reservation. Please try again.
+  </p>
+  }
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Book</th>
+          <th>Requester</th>
+          <th>Telegram</th>
+          <th>Status</th>
+          <th>Dates</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (reservation of reservations(); track reservation.id) {
+        <tr>
+          <td>
+            <strong>{{ reservation.book.title }}</strong><br />
+            <span class="muted">{{ reservation.book.author }}</span>
+          </td>
+          <td>{{ reservation.requesterName }}</td>
+          <td>
+            <a
+              [href]="telegramUrl(reservation.telegramUsername)"
+              target="_blank"
+              rel="noopener noreferrer"
+              >{{ reservation.telegramUsername }}</a
+            >
+          </td>
+          <td>
+            <span
+              class="status-badge"
+              [class]="'status-badge status-badge--' + reservation.status.toLowerCase()"
+              >{{ reservation.status }}</span
+            >
+          </td>
+          <td class="dates">
+            <span>Reserved: {{ reservation.reservedAt | date: 'medium' }}</span>
+            @if (reservation.borrowedAt) {
+            <span>Borrowed: {{ reservation.borrowedAt | date: 'medium' }}</span>
+            } @if (reservation.returnedAt) {
+            <span>Returned: {{ reservation.returnedAt | date: 'medium' }}</span>
+            } @if (reservation.cancelledAt) {
+            <span
+              >Cancelled: {{ reservation.cancelledAt | date: 'medium' }}</span
+            >
+            } @if (reservation.cancellationReason) {
+            <span>Reason: {{ reservation.cancellationReason }}</span>
+            }
+          </td>
+          <td class="actions">
+            @if (reservation.status === 'RESERVED') {
+            <button
+              type="button"
+              [disabled]="pendingReservationId() !== null"
+              (click)="markBorrowed(reservation)"
+            >
+              {{ actionLabel(reservation.id, 'borrow') }}
+            </button>
+            <button
+              class="secondary-action"
+              type="button"
+              [disabled]="pendingReservationId() !== null"
+              (click)="cancelReservation(reservation)"
+            >
+              {{ actionLabel(reservation.id, 'cancel') }}
+            </button>
+            } @else if (reservation.status === 'BORROWED') {
+            <button
+              type="button"
+              [disabled]="pendingReservationId() !== null"
+              (click)="markReturned(reservation)"
+            >
+              {{ actionLabel(reservation.id, 'return') }}
+            </button>
+            } @else {
+            <span class="muted">No actions</span>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="pagination" aria-label="Reservation pages">
+    <button
+      type="button"
+      [disabled]="currentPage() <= 1 || isLoading()"
+      (click)="showPreviousPage()"
+    >
+      Previous
+    </button>
+    <span>Page {{ currentPage() }} of {{ totalPages() || 1 }}</span>
+    <button
+      type="button"
+      [disabled]="currentPage() >= totalPages() || isLoading()"
+      (click)="showNextPage()"
+    >
+      Next
+    </button>
+  </nav>
+  }
+</section>
