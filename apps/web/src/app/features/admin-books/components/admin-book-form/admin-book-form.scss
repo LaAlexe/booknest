@@ -1,11 +1,95 @@
-form {
+:host {
+  display: block;
+  max-width: 58rem;
+  width: 100%;
+}
+
+form,
+.translation-cards {
   display: grid;
-  gap: 0.5rem;
+}
+
+form {
+  gap: 1.5rem;
+}
+
+.translation-cards {
+  gap: 1rem;
+}
+
+.translation-card,
+.general-information {
+  background: #fbfcfa;
+  border: 1px solid #dfe4df;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.translation-card__header {
+  align-items: flex-start;
+  border-bottom: 1px solid #e6eae6;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+}
+
+h2,
+.translation-card__header p {
+  margin: 0;
+}
+
+h2 {
+  font-size: 1.05rem;
+}
+
+.translation-card__header p {
+  color: #68736f;
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+}
+
+.translation-card__badge {
+  background: #edf1ee;
+  border-radius: 999px;
+  color: #52605b;
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  text-transform: capitalize;
+}
+
+.translation-card__badge--required {
+  background: #e3f0ea;
+  color: #17634e;
+}
+
+.translation-fields,
+.general-fields {
+  display: grid;
+  gap: 1rem 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.general-information h2 {
+  margin-bottom: 1rem;
+}
+
+.form-field {
+  align-content: start;
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.form-field--full {
+  grid-column: 1 / -1;
 }
 
 label {
   font-weight: 650;
-  margin-top: 0.65rem;
 }
 
 label span {
@@ -16,39 +100,103 @@ label span {
 input,
 select,
 textarea {
+  background: #fff;
   border: 1px solid #aeb9b3;
   border-radius: 0.4rem;
-  padding: 0.55rem 0.7rem;
+  font: inherit;
+  max-width: 100%;
+  padding: 0.65rem 0.75rem;
+  width: 100%;
 }
 
 input,
 select {
-  min-height: 2.65rem;
+  min-height: 2.75rem;
 }
 
 textarea {
+  min-height: 8rem;
   resize: vertical;
 }
 
-button {
-  background: #17634e;
-  border: 0;
-  border-radius: 0.4rem;
-  color: #fff;
-  cursor: pointer;
-  justify-self: start;
-  margin-top: 1rem;
-  min-height: 2.65rem;
-  padding: 0.55rem 1.2rem;
-}
-
-button:disabled {
-  cursor: wait;
-  opacity: 0.65;
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: #28705c;
+  outline: 2px solid rgb(40 112 92 / 22%);
+  outline-offset: 1px;
 }
 
 .field-error {
   color: #8b2929;
   font-size: 0.88rem;
   margin: 0;
+}
+
+.form-actions {
+  align-items: center;
+  border-top: 1px solid #dfe4df;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 1.25rem;
+}
+
+.primary-action,
+.secondary-action {
+  border-radius: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.1rem;
+}
+
+.primary-action {
+  background: #17634e;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+}
+
+.primary-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.secondary-action {
+  align-items: center;
+  border: 1px solid #aeb9b3;
+  color: #33423d;
+  display: inline-flex;
+  text-decoration: none;
+}
+
+@media (max-width: 42rem) {
+  .translation-card,
+  .general-information {
+    padding: 1rem;
+  }
+
+  .translation-card__header {
+    align-items: flex-start;
+  }
+
+  .translation-fields,
+  .general-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field--full {
+    grid-column: auto;
+  }
+
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .primary-action,
+  .secondary-action {
+    justify-content: center;
+    width: 100%;
+  }
 }

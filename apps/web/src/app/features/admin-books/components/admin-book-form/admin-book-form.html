@@ -1,118 +1,174 @@
 <form [formGroup]="bookForm" (ngSubmit)="submitBook()" novalidate>
-  <div formGroupName="translations">
-    <fieldset formGroupName="en">
-      <legend>{{ 'admin.books.form.englishSection' | translate }}</legend>
-      <p>{{ 'admin.books.form.englishFallback' | translate }}</p>
+  <div class="translation-cards" formGroupName="translations">
+    <section class="translation-card" formGroupName="en">
+      <header class="translation-card__header">
+        <div>
+          <h2>{{ 'admin.books.form.englishSection' | translate }}</h2>
+          <p>{{ 'admin.books.form.englishFallback' | translate }}</p>
+        </div>
+        <span class="translation-card__badge translation-card__badge--required">
+          {{ 'common.required' | translate }}
+        </span>
+      </header>
 
-      <label for="book-title">{{ 'admin.books.form.title' | translate }}</label>
-      <input
-        id="book-title"
-        type="text"
-        formControlName="title"
-        maxlength="255"
-      />
-      @if
-      (shouldShowError(bookForm.controls.translations.controls.en.controls.title))
-      {
-      <p class="field-error">{{ 'admin.books.form.titleError' | translate }}</p>
-      }
+      <div class="translation-fields">
+        <div class="form-field">
+          <label for="book-title"
+            >{{ 'admin.books.form.title' | translate }}</label
+          >
+          <input
+            id="book-title"
+            type="text"
+            formControlName="title"
+            maxlength="255"
+          />
+          @if
+          (shouldShowError(bookForm.controls.translations.controls.en.controls.title))
+          {
+          <p class="field-error">
+            {{ 'admin.books.form.titleError' | translate }}
+          </p>
+          }
+        </div>
 
-      <label for="book-author"
-        >{{ 'admin.books.form.author' | translate }}</label
-      >
-      <input
-        id="book-author"
-        type="text"
-        formControlName="author"
-        maxlength="255"
-      />
-      @if
-      (shouldShowError(bookForm.controls.translations.controls.en.controls.author))
-      {
-      <p class="field-error">
-        {{ 'admin.books.form.authorError' | translate }}
-      </p>
-      }
+        <div class="form-field">
+          <label for="book-author"
+            >{{ 'admin.books.form.author' | translate }}</label
+          >
+          <input
+            id="book-author"
+            type="text"
+            formControlName="author"
+            maxlength="255"
+          />
+          @if
+          (shouldShowError(bookForm.controls.translations.controls.en.controls.author))
+          {
+          <p class="field-error">
+            {{ 'admin.books.form.authorError' | translate }}
+          </p>
+          }
+        </div>
 
-      <label for="book-description"
-        >{{ 'admin.books.form.description' | translate }}
-        <span>({{ 'common.optional' | translate }})</span></label
-      >
-      <textarea
-        id="book-description"
-        formControlName="description"
-        rows="5"
-      ></textarea>
-    </fieldset>
+        <div class="form-field form-field--full">
+          <label for="book-description">
+            {{ 'admin.books.form.description' | translate }}
+            <span>({{ 'common.optional' | translate }})</span>
+          </label>
+          <textarea
+            id="book-description"
+            formControlName="description"
+            rows="5"
+          ></textarea>
+        </div>
+      </div>
+    </section>
 
-    <fieldset formGroupName="uk">
-      <legend>{{ 'admin.books.form.ukrainianSection' | translate }}</legend>
-      <p>{{ 'admin.books.form.ukrainianOptional' | translate }}</p>
+    <section class="translation-card" formGroupName="uk">
+      <header class="translation-card__header">
+        <div>
+          <h2>{{ 'admin.books.form.ukrainianSection' | translate }}</h2>
+          <p>{{ 'admin.books.form.ukrainianOptional' | translate }}</p>
+        </div>
+        <span class="translation-card__badge"
+          >{{ 'common.optional' | translate }}</span
+        >
+      </header>
 
-      <label for="book-title-uk"
-        >{{ 'admin.books.form.titleUk' | translate }}</label
-      >
-      <input
-        id="book-title-uk"
-        type="text"
-        formControlName="title"
-        maxlength="255"
-      />
+      <div class="translation-fields">
+        <div class="form-field">
+          <label for="book-title-uk"
+            >{{ 'admin.books.form.titleUk' | translate }}</label
+          >
+          <input
+            id="book-title-uk"
+            type="text"
+            formControlName="title"
+            maxlength="255"
+          />
+        </div>
 
-      <label for="book-author-uk"
-        >{{ 'admin.books.form.authorUk' | translate }}</label
-      >
-      <input
-        id="book-author-uk"
-        type="text"
-        formControlName="author"
-        maxlength="255"
-      />
+        <div class="form-field">
+          <label for="book-author-uk"
+            >{{ 'admin.books.form.authorUk' | translate }}</label
+          >
+          <input
+            id="book-author-uk"
+            type="text"
+            formControlName="author"
+            maxlength="255"
+          />
+        </div>
 
-      <label for="book-description-uk"
-        >{{ 'admin.books.form.descriptionUk' | translate }}
-        <span>({{ 'common.optional' | translate }})</span></label
-      >
-      <textarea
-        id="book-description-uk"
-        formControlName="description"
-        rows="5"
-      ></textarea>
-      @if (shouldShowError(bookForm.controls.translations.controls.uk)) {
-      <p class="field-error">
-        {{ 'admin.books.form.ukrainianError' | translate }}
-      </p>
-      }
-    </fieldset>
+        <div class="form-field form-field--full">
+          <label for="book-description-uk">
+            {{ 'admin.books.form.descriptionUk' | translate }}
+            <span>({{ 'common.optional' | translate }})</span>
+          </label>
+          <textarea
+            id="book-description-uk"
+            formControlName="description"
+            rows="5"
+          ></textarea>
+          @if (shouldShowError(bookForm.controls.translations.controls.uk)) {
+          <p class="field-error">
+            {{ 'admin.books.form.ukrainianError' | translate }}
+          </p>
+          }
+        </div>
+      </div>
+    </section>
   </div>
 
-  <label for="book-genre">{{ 'admin.books.form.genre' | translate }}</label>
-  <select id="book-genre" formControlName="genreId">
-    <option value="">{{ 'admin.books.form.selectGenre' | translate }}</option>
-    @for (genre of genres(); track genre.id) {
-    <option [value]="genre.id">{{ genre.name }}</option>
-    }
-  </select>
-  @if (shouldShowError(bookForm.controls.genreId)) {
-  <p class="field-error">{{ 'admin.books.form.genreError' | translate }}</p>
-  }
+  <section class="general-information">
+    <h2>{{ 'admin.books.form.generalInformation' | translate }}</h2>
+    <div class="general-fields">
+      <div class="form-field">
+        <label for="book-genre"
+          >{{ 'admin.books.form.genre' | translate }}</label
+        >
+        <select id="book-genre" formControlName="genreId">
+          <option value="">
+            {{ 'admin.books.form.selectGenre' | translate }}
+          </option>
+          @for (genre of genres(); track genre.id) {
+          <option [value]="genre.id">{{ genre.name }}</option>
+          }
+        </select>
+        @if (shouldShowError(bookForm.controls.genreId)) {
+        <p class="field-error">
+          {{ 'admin.books.form.genreError' | translate }}
+        </p>
+        }
+      </div>
 
-  <label for="book-cover"
-    >{{ 'admin.books.form.coverUrl' | translate }}
-    <span>({{ 'common.optional' | translate }})</span></label
-  >
-  <input
-    id="book-cover"
-    type="url"
-    formControlName="coverUrl"
-    maxlength="2048"
-  />
-  @if (shouldShowError(bookForm.controls.coverUrl)) {
-  <p class="field-error">{{ 'admin.books.form.coverUrlError' | translate }}</p>
-  }
+      <div class="form-field">
+        <label for="book-cover">
+          {{ 'admin.books.form.coverUrl' | translate }}
+          <span>({{ 'common.optional' | translate }})</span>
+        </label>
+        <input
+          id="book-cover"
+          type="url"
+          formControlName="coverUrl"
+          maxlength="2048"
+        />
+        @if (shouldShowError(bookForm.controls.coverUrl)) {
+        <p class="field-error">
+          {{ 'admin.books.form.coverUrlError' | translate }}
+        </p>
+        }
+      </div>
+    </div>
+  </section>
 
-  <button type="submit" [disabled]="isSaving()">
-    {{ (isSaving() ? 'admin.books.form.saving' : 'admin.books.form.save') |
-    translate }}
-  </button>
+  <div class="form-actions">
+    <a class="secondary-action" routerLink="/admin/books"
+      >{{ 'common.cancel' | translate }}</a
+    >
+    <button class="primary-action" type="submit" [disabled]="isSaving()">
+      {{ (isSaving() ? 'admin.books.form.saving' : 'admin.books.form.save') |
+      translate }}
+    </button>
+  </div>
 </form>

@@ -15,6 +15,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
+import { RouterLink } from '@angular/router';
 import { trimmedRequiredValidator } from '../../../../shared/validators/trimmed-required.validator';
 import { Genre } from '../../../catalog/models/catalog.models';
 import {
@@ -39,7 +40,7 @@ const optionalTranslationValidator: ValidatorFn = (
 
 @Component({
   selector: 'app-admin-book-form',
-  imports: [ReactiveFormsModule, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './admin-book-form.html',
   styleUrl: './admin-book-form.scss',
 })

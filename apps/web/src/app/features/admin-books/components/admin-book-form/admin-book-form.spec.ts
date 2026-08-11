@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminBookForm } from './admin-book-form';
 
@@ -9,7 +10,7 @@ describe('AdminBookForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminBookForm],
-      providers: [provideTranslationTesting()],
+      providers: [provideRouter([]), provideTranslationTesting()],
     }).compileComponents();
     bookFormFixture = TestBed.createComponent(AdminBookForm);
     bookFormFixture.componentRef.setInput('genres', [
