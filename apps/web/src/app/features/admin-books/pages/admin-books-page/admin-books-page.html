@@ -1,0 +1,61 @@
+<section>
+  <div class="heading">
+    <div>
+      <p class="eyebrow">Administration</p>
+      <h1>Books</h1>
+    </div>
+    <a class="primary-action" routerLink="/admin/books/new">Add book</a>
+  </div>
+
+  @if (isLoading()) {
+  <div class="state" role="status">Loading books…</div>
+  } @else if (hasLoadError()) {
+  <div class="state state--error" role="alert">We couldn't load the books.</div>
+  } @else if (books().length === 0) {
+  <div class="state">No books have been added yet.</div>
+  } @else { @if (hasArchiveError()) {
+  <p class="archive-error" role="alert">
+    We couldn't archive the book. Refresh and try again.
+  </p>
+  }
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Genre</th>
+          <th>Status</th>
+          <th>Archived</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (book of books(); track book.id) {
+        <tr>
+          <td>{{ book.title }}</td>
+          <td>{{ book.author }}</td>
+          <td>{{ book.genre.name }}</td>
+          <td>{{ book.status }}</td>
+          <td>{{ book.isArchived ? 'Yes' : 'No' }}</td>
+          <td class="actions">
+            <a [routerLink]="['/admin/books', book.id, 'edit']">Edit</a>
+            @if (canArchive(book)) {
+            <button
+              type="button"
+              [disabled]="archivingBookId() !== null"
+              (click)="archiveBook(book)"
+            >
+              {{ archivingBookId() === book.id ? 'Archiving…' : 'Archive' }}
+            </button>
+            } @else if (!book.isArchived) {
+            <span class="muted">Unavailable</span>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</section>

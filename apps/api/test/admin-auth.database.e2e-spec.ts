@@ -117,6 +117,15 @@ describe('Admin authentication (database e2e)', () => {
       .expect(401);
   });
 
+  it('protects admin book management without affecting public catalog access', async () => {
+    await request(apiApplication.getHttpServer())
+      .get('/api/v1/admin/books')
+      .expect(401);
+    await request(apiApplication.getHttpServer())
+      .get('/api/v1/books')
+      .expect(200);
+  });
+
   function login(): request.Test {
     return request(apiApplication.getHttpServer())
       .post('/api/v1/admin/auth/login')

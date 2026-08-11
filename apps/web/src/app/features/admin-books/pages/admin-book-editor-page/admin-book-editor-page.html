@@ -1,0 +1,23 @@
+<a routerLink="/admin/books">← Back to books</a>
+
+<section class="editor-card">
+  <p class="eyebrow">Administration</p>
+  <h1>{{ isEditing ? 'Edit book' : 'Add book' }}</h1>
+
+  @if (isLoading()) {
+  <div role="status">Loading book form…</div>
+  } @else if (hasLoadError()) {
+  <div class="error" role="alert">We couldn't load the book form.</div>
+  } @else { @if (hasSaveError()) {
+  <p class="error" role="alert">
+    We couldn't save the book. Check the details and try again.
+  </p>
+  }
+  <app-admin-book-form
+    [book]="book()"
+    [genres]="genres()"
+    [isSaving]="isSaving()"
+    (saveBook)="saveBook($event)"
+  />
+  }
+</section>

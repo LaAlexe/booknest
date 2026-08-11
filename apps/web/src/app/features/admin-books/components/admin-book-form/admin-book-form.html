@@ -1,0 +1,51 @@
+<form [formGroup]="bookForm" (ngSubmit)="submitBook()" novalidate>
+  <label for="book-title">Title</label>
+  <input id="book-title" type="text" formControlName="title" maxlength="255" />
+  @if (shouldShowError('title')) {
+  <p class="field-error">Enter a title (maximum 255 characters).</p>
+  }
+
+  <label for="book-author">Author</label>
+  <input
+    id="book-author"
+    type="text"
+    formControlName="author"
+    maxlength="255"
+  />
+  @if (shouldShowError('author')) {
+  <p class="field-error">Enter an author (maximum 255 characters).</p>
+  }
+
+  <label for="book-genre">Genre</label>
+  <select id="book-genre" formControlName="genreId">
+    <option value="">Select a genre</option>
+    @for (genre of genres(); track genre.id) {
+    <option [value]="genre.id">{{ genre.name }}</option>
+    }
+  </select>
+  @if (shouldShowError('genreId')) {
+  <p class="field-error">Select a genre.</p>
+  }
+
+  <label for="book-description">Description <span>(optional)</span></label>
+  <textarea
+    id="book-description"
+    formControlName="description"
+    rows="5"
+  ></textarea>
+
+  <label for="book-cover">Cover URL <span>(optional)</span></label>
+  <input
+    id="book-cover"
+    type="url"
+    formControlName="coverUrl"
+    maxlength="2048"
+  />
+  @if (shouldShowError('coverUrl')) {
+  <p class="field-error">Enter a complete HTTP or HTTPS URL.</p>
+  }
+
+  <button type="submit" [disabled]="isSaving()">
+    {{ isSaving() ? 'Saving…' : 'Save book' }}
+  </button>
+</form>

@@ -13,8 +13,6 @@ import {
   AbstractControl,
   FormBuilder,
   ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -24,17 +22,13 @@ import {
   Reservation,
 } from '../../models/reservation.models';
 import { ReservationApiService } from '../../services/reservation-api.service';
+import { trimmedRequiredValidator } from '../../../../shared/validators/trimmed-required.validator';
 
 const TELEGRAM_USERNAME_PATTERN = /^@?[a-zA-Z][a-zA-Z0-9_]{4,31}$/;
 
-const trimmedRequired: ValidatorFn = (
+const validTelegramUsername = (
   formControl: AbstractControl<string>,
-): ValidationErrors | null =>
-  formControl.value.trim().length > 0 ? null : { required: true };
-
-const validTelegramUsername: ValidatorFn = (
-  formControl: AbstractControl<string>,
-): ValidationErrors | null => {
+): { telegramUsername: true } | null => {
   const telegramUsername = formControl.value.trim();
   if (!telegramUsername) {
     return null;
@@ -61,8 +55,8 @@ export class ReservationForm {
   readonly availabilityConflict = output<void>();
 
   protected readonly reservationForm = this.formBuilder.nonNullable.group({
-    requesterName: ['', [trimmedRequired, Validators.maxLength(150)]],
-    telegramUsername: ['', [trimmedRequired, validTelegramUsername]],
+    requesterName: ['', [trimmedRequiredValidator, Validators.maxLength(150)]],
+    telegramUsername: ['', [trimmedRequiredValidator, validTelegramUsername]],
   });
   protected readonly isSubmitting = signal(false);
   protected readonly hasAttemptedSubmission = signal(false);

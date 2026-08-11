@@ -4,6 +4,7 @@
   @if (admin(); as signedInAdmin) {
   <p>Signed in as <strong>{{ signedInAdmin.email }}</strong></p>
   }
+  <p><a routerLink="/admin/books">Manage books</a></p>
   <button type="button" [disabled]="isLoggingOut()" (click)="logout()">
     {{ isLoggingOut() ? 'Signing out…' : 'Sign out' }}
   </button>

@@ -1,11 +1,12 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AdminAuthStore } from '../../services/admin-auth.store';
 
 @Component({
   selector: 'app-admin-page',
+  imports: [RouterLink],
   templateUrl: './admin-page.html',
   styleUrl: './admin-page.scss',
 })

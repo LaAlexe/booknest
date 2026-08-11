@@ -13,6 +13,33 @@ export const ADMIN_ROUTES: Routes = [
     title: 'Admin login | BookNest',
   },
   {
+    path: 'books/new',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('../admin-books/pages/admin-book-editor-page/admin-book-editor-page').then(
+        (bookEditorModule) => bookEditorModule.AdminBookEditorPage,
+      ),
+    title: 'Add book | BookNest',
+  },
+  {
+    path: 'books/:bookId/edit',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('../admin-books/pages/admin-book-editor-page/admin-book-editor-page').then(
+        (bookEditorModule) => bookEditorModule.AdminBookEditorPage,
+      ),
+    title: 'Edit book | BookNest',
+  },
+  {
+    path: 'books',
+    canActivate: [adminAuthGuard],
+    loadComponent: () =>
+      import('../admin-books/pages/admin-books-page/admin-books-page').then(
+        (adminBooksModule) => adminBooksModule.AdminBooksPage,
+      ),
+    title: 'Manage books | BookNest',
+  },
+  {
     path: '',
     canActivate: [adminAuthGuard],
     loadComponent: () =>

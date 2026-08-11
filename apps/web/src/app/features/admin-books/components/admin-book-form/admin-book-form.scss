@@ -1,0 +1,54 @@
+form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 650;
+  margin-top: 0.65rem;
+}
+
+label span {
+  color: #68736f;
+  font-weight: 400;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #aeb9b3;
+  border-radius: 0.4rem;
+  padding: 0.55rem 0.7rem;
+}
+
+input,
+select {
+  min-height: 2.65rem;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  background: #17634e;
+  border: 0;
+  border-radius: 0.4rem;
+  color: #fff;
+  cursor: pointer;
+  justify-self: start;
+  margin-top: 1rem;
+  min-height: 2.65rem;
+  padding: 0.55rem 1.2rem;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.field-error {
+  color: #8b2929;
+  font-size: 0.88rem;
+  margin: 0;
+}
