@@ -4,41 +4,81 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BookStatus, Prisma } from '@prisma/client';
+import { BookStatus, ContentLocale, Prisma } from '@prisma/client';
+import { selectContentTranslation } from '../content-localization/select-content-translation';
 import { PrismaService } from '../database/prisma.service';
 import { CreateAdminBookDto } from './dto/create-admin-book.dto';
 import { UpdateAdminBookDto } from './dto/update-admin-book.dto';
+import { BookTranslationDto } from './dto/book-translations.dto';
 
 const adminBookSelect = Prisma.validator<Prisma.BookSelect>()({
   id: true,
-  title: true,
-  author: true,
-  description: true,
   coverUrl: true,
   status: true,
   genreId: true,
   isArchived: true,
   createdAt: true,
   updatedAt: true,
-  genre: { select: { id: true, name: true, slug: true } },
+  translations: {
+    select: { locale: true, title: true, author: true, description: true },
+  },
+  genre: {
+    select: {
+      id: true,
+      slug: true,
+      translations: {
+        select: { locale: true, name: true },
+      },
+    },
+  },
 });
 
-export type AdminBook = Prisma.BookGetPayload<{
+type StoredAdminBook = Prisma.BookGetPayload<{
   select: typeof adminBookSelect;
 }>;
+
+export interface AdminBookTranslation {
+  title: string;
+  author: string;
+  description: string | null;
+}
+
+export interface AdminBook {
+  id: string;
+  title: string;
+  author: string;
+  description: string | null;
+  coverUrl: string | null;
+  status: BookStatus;
+  genreId: string;
+  genre: { id: string; name: string; slug: string };
+  translations: {
+    en: AdminBookTranslation;
+    uk?: AdminBookTranslation;
+  };
+  isArchived: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 @Injectable()
 export class AdminBooksService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  findAll(): Promise<AdminBook[]> {
-    return this.prismaService.book.findMany({
+  async findAll(
+    locale: ContentLocale = ContentLocale.en,
+  ): Promise<AdminBook[]> {
+    const books = await this.prismaService.book.findMany({
       select: adminBookSelect,
       orderBy: [{ isArchived: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
     });
+    return books.map((book) => this.toAdminBook(book, locale));
   }
 
-  async findOne(bookId: string): Promise<AdminBook> {
+  async findOne(
+    bookId: string,
+    locale: ContentLocale = ContentLocale.en,
+  ): Promise<AdminBook> {
     const book = await this.prismaService.book.findUnique({
       where: { id: bookId },
       select: adminBookSelect,
@@ -46,15 +86,22 @@ export class AdminBooksService {
     if (!book) {
       throw new NotFoundException('Book not found');
     }
-    return book;
+    return this.toAdminBook(book, locale);
   }
 
   async create(createBook: CreateAdminBookDto): Promise<AdminBook> {
     await this.ensureGenreExists(createBook.genreId);
-    return this.prismaService.book.create({
-      data: createBook,
+    const book = await this.prismaService.book.create({
+      data: {
+        coverUrl: createBook.coverUrl,
+        genreId: createBook.genreId,
+        translations: {
+          create: this.translationCreateInputs(createBook.translations),
+        },
+      },
       select: adminBookSelect,
     });
+    return this.toAdminBook(book);
   }
 
   async update(
@@ -68,11 +115,23 @@ export class AdminBooksService {
       await this.ensureGenreExists(updateBook.genreId);
     }
     await this.findOne(bookId);
-    return this.prismaService.book.update({
+    const book = await this.prismaService.book.update({
       where: { id: bookId },
-      data: updateBook,
+      data: {
+        coverUrl: updateBook.coverUrl,
+        genreId: updateBook.genreId,
+        translations: updateBook.translations
+          ? {
+              upsert: this.translationUpsertInputs(
+                bookId,
+                updateBook.translations,
+              ),
+            }
+          : undefined,
+      },
       select: adminBookSelect,
     });
+    return this.toAdminBook(book);
   }
 
   async archive(bookId: string): Promise<AdminBook> {
@@ -87,7 +146,6 @@ export class AdminBooksService {
     if (archiveResult.count === 1) {
       return this.findOne(bookId);
     }
-
     const book = await this.findOne(bookId);
     if (book.status !== BookStatus.AVAILABLE) {
       throw new ConflictException({
@@ -98,6 +156,115 @@ export class AdminBooksService {
       });
     }
     return book;
+  }
+
+  private translationCreateInputs(translations: {
+    en: BookTranslationDto;
+    uk?: BookTranslationDto;
+  }): Prisma.BookTranslationCreateWithoutBookInput[] {
+    return [
+      { locale: ContentLocale.en, ...translations.en },
+      ...(translations.uk
+        ? [{ locale: ContentLocale.uk, ...translations.uk }]
+        : []),
+    ];
+  }
+
+  private translationUpsertInputs(
+    bookId: string,
+    translations: {
+      en?: BookTranslationDto;
+      uk?: BookTranslationDto;
+    },
+  ): Prisma.BookTranslationUpsertWithWhereUniqueWithoutBookInput[] {
+    return [
+      ...(translations.en
+        ? [
+            this.translationUpsertInput(
+              bookId,
+              ContentLocale.en,
+              translations.en,
+            ),
+          ]
+        : []),
+      ...(translations.uk
+        ? [
+            this.translationUpsertInput(
+              bookId,
+              ContentLocale.uk,
+              translations.uk,
+            ),
+          ]
+        : []),
+    ];
+  }
+
+  private translationUpsertInput(
+    bookId: string,
+    locale: ContentLocale,
+    translation: BookTranslationDto,
+  ): Prisma.BookTranslationUpsertWithWhereUniqueWithoutBookInput {
+    return {
+      where: { bookId_locale: { bookId, locale } },
+      create: { locale, ...translation },
+      update: translation,
+    };
+  }
+
+  private toAdminBook(
+    book: StoredAdminBook,
+    locale: ContentLocale = ContentLocale.en,
+  ): AdminBook {
+    const englishTranslation = selectContentTranslation(
+      book.translations,
+      ContentLocale.en,
+    );
+    const ukrainianTranslation = book.translations.find(
+      (translation) => translation.locale === ContentLocale.uk,
+    );
+    const effectiveTranslation = selectContentTranslation(
+      book.translations,
+      locale,
+    );
+    const effectiveGenre = selectContentTranslation(
+      book.genre.translations,
+      locale,
+    );
+    return {
+      id: book.id,
+      title: effectiveTranslation.title,
+      author: effectiveTranslation.author,
+      description: effectiveTranslation.description,
+      coverUrl: book.coverUrl,
+      status: book.status,
+      genreId: book.genreId,
+      genre: {
+        id: book.genre.id,
+        slug: book.genre.slug,
+        name: effectiveGenre.name,
+      },
+      translations: {
+        en: this.toAdminTranslation(englishTranslation),
+        ...(ukrainianTranslation
+          ? { uk: this.toAdminTranslation(ukrainianTranslation) }
+          : {}),
+      },
+      isArchived: book.isArchived,
+      createdAt: book.createdAt,
+      updatedAt: book.updatedAt,
+    };
+  }
+
+  private toAdminTranslation(translation: {
+    title: string;
+    author: string;
+    description: string | null;
+  }): AdminBookTranslation {
+    return {
+      title: translation.title,
+      author: translation.author,
+      description: translation.description,
+    };
   }
 
   private async ensureGenreExists(genreId: string): Promise<void> {

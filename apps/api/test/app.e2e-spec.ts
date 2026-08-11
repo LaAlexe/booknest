@@ -1,5 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { BookStatus, ReservationStatus } from '@prisma/client';
+import { BookStatus, ContentLocale, ReservationStatus } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -32,6 +32,26 @@ describe('AppController (e2e)', () => {
       id: '87de0284-9b75-4395-9bd8-1217e374ef78',
       name: 'Fantasy',
       slug: 'fantasy',
+    },
+  };
+  const storedPublicBook = {
+    id: publicBook.id,
+    coverUrl: publicBook.coverUrl,
+    status: publicBook.status,
+    createdAt: publicBook.createdAt,
+    updatedAt: publicBook.updatedAt,
+    translations: [
+      {
+        locale: ContentLocale.en,
+        title: publicBook.title,
+        author: publicBook.author,
+        description: publicBook.description,
+      },
+    ],
+    genre: {
+      id: publicBook.genre.id,
+      slug: publicBook.genre.slug,
+      translations: [{ locale: ContentLocale.en, name: publicBook.genre.name }],
     },
   };
   const publicReservation = {
@@ -102,7 +122,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/api/v1/books (GET)', () => {
-    runTransaction.mockResolvedValue([[publicBook], 1]);
+    runTransaction.mockResolvedValue([[storedPublicBook], 1]);
 
     return request(apiApplication.getHttpServer())
       .get('/api/v1/books?page=1&pageSize=10&genre=fantasy&q=hobbit')
@@ -125,7 +145,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/api/v1/books/:id (GET)', () => {
-    findBook.mockResolvedValue(publicBook);
+    findBook.mockResolvedValue(storedPublicBook);
 
     return request(apiApplication.getHttpServer())
       .get(`/api/v1/books/${publicBook.id}`)
@@ -138,7 +158,15 @@ describe('AppController (e2e)', () => {
   });
 
   it('/api/v1/genres (GET)', () => {
-    findManyGenres.mockResolvedValue([publicBook.genre]);
+    findManyGenres.mockResolvedValue([
+      {
+        id: publicBook.genre.id,
+        slug: publicBook.genre.slug,
+        translations: [
+          { locale: ContentLocale.en, name: publicBook.genre.name },
+        ],
+      },
+    ]);
 
     return request(apiApplication.getHttpServer())
       .get('/api/v1/genres')

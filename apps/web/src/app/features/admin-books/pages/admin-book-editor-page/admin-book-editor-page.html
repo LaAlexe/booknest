@@ -1,18 +1,20 @@
 <app-admin-navigation />
-<a routerLink="/admin/books">← Back to books</a>
+<a routerLink="/admin/books">{{ 'admin.books.back' | translate }}</a>
 
 <section class="editor-card">
-  <p class="eyebrow">Administration</p>
-  <h1>{{ isEditing ? 'Edit book' : 'Add book' }}</h1>
+  <p class="eyebrow">{{ 'common.administration' | translate }}</p>
+  <h1>
+    {{ (isEditing ? 'admin.books.edit' : 'admin.books.add') | translate }}
+  </h1>
 
   @if (isLoading()) {
-  <div role="status">Loading book form…</div>
+  <div role="status">{{ 'admin.books.formLoading' | translate }}</div>
   } @else if (hasLoadError()) {
-  <div class="error" role="alert">We couldn't load the book form.</div>
+  <div class="error" role="alert">
+    {{ 'admin.books.formLoadError' | translate }}
+  </div>
   } @else { @if (hasSaveError()) {
-  <p class="error" role="alert">
-    We couldn't save the book. Check the details and try again.
-  </p>
+  <p class="error" role="alert">{{ 'admin.books.saveError' | translate }}</p>
   }
   <app-admin-book-form
     [book]="book()"

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter, Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminProfile } from '../../models/admin-auth.models';
 import { AdminAuthStore } from '../../services/admin-auth.store';
 import { AdminLoginPage } from './admin-login-page';
@@ -22,6 +23,7 @@ describe('AdminLoginPage', () => {
       imports: [AdminLoginPage],
       providers: [
         provideRouter([]),
+        provideTranslationTesting(),
         { provide: AdminAuthStore, useValue: { login: loginSpy } },
       ],
     }).compileComponents();

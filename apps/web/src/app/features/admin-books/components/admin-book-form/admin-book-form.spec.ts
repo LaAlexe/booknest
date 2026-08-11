@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminBookForm } from './admin-book-form';
 
 describe('AdminBookForm', () => {
@@ -8,12 +9,22 @@ describe('AdminBookForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminBookForm],
+      providers: [provideTranslationTesting()],
     }).compileComponents();
     bookFormFixture = TestBed.createComponent(AdminBookForm);
     bookFormFixture.componentRef.setInput('genres', [
       { id: 'genre-1', name: 'Fantasy', slug: 'fantasy' },
     ]);
     bookFormFixture.detectChanges();
+  });
+
+  it('renders separate English and Ukrainian metadata sections', () => {
+    const bookFormText = getBookFormElement().textContent;
+
+    expect(bookFormText).toContain('English');
+    expect(bookFormText).toContain('Required fallback content');
+    expect(bookFormText).toContain('Українська');
+    expect(bookFormText).toContain('Optional Ukrainian translation');
   });
 
   it('shows validation errors and does not save an invalid book', () => {
@@ -39,12 +50,62 @@ describe('AdminBookForm', () => {
     submitForm();
 
     expect(saveSpy).toHaveBeenCalledWith({
-      title: 'The Hobbit',
-      author: 'J. R. R. Tolkien',
-      description: null,
+      translations: {
+        en: {
+          title: 'The Hobbit',
+          author: 'J. R. R. Tolkien',
+          description: null,
+        },
+      },
       coverUrl: null,
       genreId: 'genre-1',
     });
+  });
+
+  it('emits optional Ukrainian translation fields when supplied', () => {
+    const saveSpy = vi.fn();
+    bookFormFixture.componentInstance.saveBook.subscribe(saveSpy);
+    setInput('#book-title', 'The Hobbit');
+    setInput('#book-author', 'J. R. R. Tolkien');
+    setInput('#book-title-uk', ' Гобіт ');
+    setInput('#book-author-uk', ' Дж. Р. Р. Толкін ');
+    setInput('#book-genre', 'genre-1');
+
+    submitForm();
+
+    expect(saveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        translations: {
+          en: {
+            title: 'The Hobbit',
+            author: 'J. R. R. Tolkien',
+            description: null,
+          },
+          uk: {
+            title: 'Гобіт',
+            author: 'Дж. Р. Р. Толкін',
+            description: null,
+          },
+        },
+      }),
+    );
+  });
+
+  it('rejects a partial Ukrainian translation', () => {
+    const saveSpy = vi.fn();
+    bookFormFixture.componentInstance.saveBook.subscribe(saveSpy);
+    setInput('#book-title', 'The Hobbit');
+    setInput('#book-author', 'J. R. R. Tolkien');
+    setInput('#book-title-uk', 'Гобіт');
+    setInput('#book-genre', 'genre-1');
+
+    submitForm();
+    bookFormFixture.detectChanges();
+
+    expect(getBookFormElement().textContent).toContain(
+      'Enter both Ukrainian title and author',
+    );
+    expect(saveSpy).not.toHaveBeenCalled();
   });
 
   function getBookFormElement(): HTMLElement {

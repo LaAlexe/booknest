@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
+import { LanguageService } from '../../../../shared/services/language.service';
 import { AdminAuthStore } from '../../services/admin-auth.store';
 import { AdminPage } from './admin-page';
 
@@ -10,10 +12,12 @@ describe('AdminPage', () => {
   const logoutSpy = vi.fn(() => of({ success: true as const }));
 
   beforeEach(async () => {
+    localStorage.clear();
     await TestBed.configureTestingModule({
       imports: [AdminPage],
       providers: [
         provideRouter([]),
+        provideTranslationTesting(),
         {
           provide: AdminAuthStore,
           useValue: {
@@ -28,6 +32,8 @@ describe('AdminPage', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => localStorage.clear());
+
   it('renders the signed-in admin and logs out to the login page', () => {
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -39,5 +45,15 @@ describe('AdminPage', () => {
     expect(adminElement.textContent).toContain('admin@example.com');
     expect(logoutSpy).toHaveBeenCalledTimes(1);
     expect(navigateSpy).toHaveBeenCalledWith(['/admin/login']);
+  });
+
+  it('translates the admin navigation into Ukrainian', () => {
+    TestBed.inject(LanguageService).setLanguage('uk');
+    adminFixture.detectChanges();
+
+    const adminText = (adminFixture.nativeElement as HTMLElement).textContent;
+    expect(adminText).toContain('Книги');
+    expect(adminText).toContain('Бронювання');
+    expect(adminText).toContain('Вийти');
   });
 });

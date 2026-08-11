@@ -2,6 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Observable, of, Subject, throwError } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
+import { LanguageService } from '../../../../shared/services/language.service';
 import { BookStatus } from '../../models/catalog.models';
 import { Reservation } from '../../models/reservation.models';
 import { ReservationApiService } from '../../services/reservation-api.service';
@@ -35,6 +37,7 @@ describe('ReservationForm', () => {
     await TestBed.configureTestingModule({
       imports: [ReservationForm],
       providers: [
+        provideTranslationTesting(),
         {
           provide: ReservationApiService,
           useValue: { createReservation: createReservationSpy },
@@ -47,7 +50,10 @@ describe('ReservationForm', () => {
     reservationFixture.detectChanges();
   }
 
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+  });
 
   it('shows the Reserve action for an available book', async () => {
     await configureReservationFormTest();
@@ -78,6 +84,15 @@ describe('ReservationForm', () => {
 
     expect(getReservationElement().textContent).toContain('Enter your name');
     expect(createReservationSpy).not.toHaveBeenCalled();
+  });
+
+  it('translates reservation validation messages into Ukrainian', async () => {
+    await configureReservationFormTest();
+    TestBed.inject(LanguageService).setLanguage('uk');
+    submitForm();
+    reservationFixture.detectChanges();
+
+    expect(getReservationElement().textContent).toContain('Введіть ім’я');
   });
 
   it.each(['   ', '@bad-name'])(

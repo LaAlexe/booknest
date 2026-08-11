@@ -1,53 +1,60 @@
 <section>
   <div class="heading">
     <div>
-      <p class="eyebrow">Explore the shelves</p>
-      <h1>Book catalog</h1>
+      <p class="eyebrow">{{ 'catalog.eyebrow' | translate }}</p>
+      <h1>{{ 'catalog.title' | translate }}</h1>
     </div>
     @if (catalogPage()) {
-    <p>{{ bookCountLabel() }}</p>
+    <p>
+      {{ (catalogPage()!.meta.total === 1 ? 'catalog.bookCount' :
+      'catalog.bookCount_other') | translate: { count: catalogPage()!.meta.total
+      } }}
+    </p>
     }
   </div>
 
   <form class="filters" (ngSubmit)="applyFilters()">
     <label>
-      Search by title or author
+      {{ 'catalog.searchLabel' | translate }}
       <input
         [formControl]="searchControl"
         type="search"
-        placeholder="e.g. Tolkien"
+        [placeholder]="'catalog.searchPlaceholder' | translate"
       />
     </label>
     <label>
-      Genre
+      {{ 'catalog.genreLabel' | translate }}
       <select [formControl]="genreControl" (change)="applyFilters()">
-        <option value="">All genres</option>
+        <option value="">{{ 'catalog.allGenres' | translate }}</option>
         @for (availableGenre of availableGenres(); track availableGenre.id) {
         <option [value]="availableGenre.slug">{{ availableGenre.name }}</option>
         }
       </select>
     </label>
-    <button type="submit">Search</button>
+    <button type="submit">{{ 'catalog.search' | translate }}</button>
   </form>
 
   @if (isLoading()) {
-  <div class="state" role="status">Loading books…</div>
+  <div class="state" role="status">{{ 'catalog.loading' | translate }}</div>
   } @else if (hasLoadError()) {
   <div class="state state--error" role="alert">
-    We couldn't load the catalog. Please try again.
+    {{ 'catalog.loadError' | translate }}
   </div>
   } @else if (catalogPage(); as currentCatalogPage) { @if
   (currentCatalogPage.data.length === 0) {
   <div class="state">
-    <h2>No books found</h2>
-    <p>Try changing your search or genre filter.</p>
+    <h2>{{ 'catalog.emptyTitle' | translate }}</h2>
+    <p>{{ 'catalog.emptyMessage' | translate }}</p>
   </div>
   } @else {
   <div class="book-grid">
     @for (book of currentCatalogPage.data; track book.id) {
     <article class="book-card">
       @if (book.coverUrl) {
-      <img [src]="book.coverUrl" [alt]="'Cover of ' + book.title" />
+      <img
+        [src]="book.coverUrl"
+        [alt]="'book.coverAlt' | translate: { title: book.title }"
+      />
       } @else {
       <div class="cover-placeholder" aria-hidden="true">BN</div>
       }
@@ -62,24 +69,27 @@
   </div>
 
   @if (shouldDisplayPagination()) {
-  <nav class="pagination" aria-label="Catalog pages">
+  <nav
+    class="pagination"
+    [attr.aria-label]="'catalog.paginationLabel' | translate"
+  >
     <button
       type="button"
       [disabled]="currentCatalogPage.meta.page === 1"
       (click)="goToPage(currentCatalogPage.meta.page - 1)"
     >
-      Previous
+      {{ 'common.previous' | translate }}
     </button>
     <span
-      >Page {{ currentCatalogPage.meta.page }} of {{
-      currentCatalogPage.meta.totalPages }}</span
+      >{{ 'common.pageOf' | translate: { page: currentCatalogPage.meta.page,
+      totalPages: currentCatalogPage.meta.totalPages } }}</span
     >
     <button
       type="button"
       [disabled]="currentCatalogPage.meta.page === currentCatalogPage.meta.totalPages"
       (click)="goToPage(currentCatalogPage.meta.page + 1)"
     >
-      Next
+      {{ 'common.next' | translate }}
     </button>
   </nav>
   } } }

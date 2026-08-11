@@ -1,16 +1,18 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
+import { finalize, switchMap } from 'rxjs';
 import { AvailabilityBadge } from '../../components/availability-badge/availability-badge';
 import { ReservationForm } from '../../components/reservation-form/reservation-form';
 import { Book } from '../../models/catalog.models';
 import { Reservation } from '../../models/reservation.models';
 import { CatalogApiService } from '../../services/catalog-api.service';
+import { LanguageService } from '../../../../shared/services/language.service';
 
 @Component({
   selector: 'app-book-details-page',
-  imports: [AvailabilityBadge, ReservationForm, RouterLink],
+  imports: [AvailabilityBadge, ReservationForm, RouterLink, TranslatePipe],
   templateUrl: './book-details-page.html',
   styleUrl: './book-details-page.scss',
 })
@@ -18,6 +20,7 @@ export class BookDetailsPage implements OnInit {
   private readonly catalogApiService = inject(CatalogApiService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly languageService = inject(LanguageService);
 
   protected readonly book = signal<Book | null>(null);
   protected readonly isLoading = signal(true);
@@ -38,11 +41,16 @@ export class BookDetailsPage implements OnInit {
       this.hasLoadError.set(true);
       return;
     }
-    this.catalogApiService
-      .getBook(bookId)
+    this.languageService.languageChanges
       .pipe(
+        switchMap((locale) => {
+          this.isLoading.set(true);
+          this.hasLoadError.set(false);
+          return this.catalogApiService
+            .getBook(bookId, locale)
+            .pipe(finalize(() => this.isLoading.set(false)));
+        }),
         takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.isLoading.set(false)),
       )
       .subscribe({
         next: (selectedBook) => this.book.set(selectedBook),

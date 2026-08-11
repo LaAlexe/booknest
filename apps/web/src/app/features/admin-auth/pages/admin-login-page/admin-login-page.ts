@@ -4,11 +4,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AdminAuthStore } from '../../services/admin-auth.store';
 
 @Component({
   selector: 'app-admin-login-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './admin-login-page.html',
   styleUrl: './admin-login-page.scss',
 })

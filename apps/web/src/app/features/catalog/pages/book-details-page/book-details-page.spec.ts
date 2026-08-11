@@ -7,6 +7,8 @@ import {
   provideRouter,
 } from '@angular/router';
 import { Observable, of, Subject, throwError } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
+import { LanguageService } from '../../../../shared/services/language.service';
 import { Book } from '../../models/catalog.models';
 import { Reservation } from '../../models/reservation.models';
 import { CatalogApiService } from '../../services/catalog-api.service';
@@ -42,15 +44,18 @@ const completedReservation: Reservation = {
 
 describe('BookDetailsPage', () => {
   let bookDetailsFixture: ComponentFixture<BookDetailsPage>;
+  let getBookSpy: ReturnType<typeof vi.fn>;
 
   async function configureBookDetailsTest(
     bookResponse = of(selectedBook),
     reservationResponse: Observable<Reservation> = of(completedReservation),
   ): Promise<void> {
+    getBookSpy = vi.fn(() => bookResponse);
     await TestBed.configureTestingModule({
       imports: [BookDetailsPage],
       providers: [
         provideRouter([]),
+        provideTranslationTesting(),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -59,7 +64,7 @@ describe('BookDetailsPage', () => {
         },
         {
           provide: CatalogApiService,
-          useValue: { getBook: vi.fn(() => bookResponse) },
+          useValue: { getBook: getBookSpy },
         },
         {
           provide: ReservationApiService,
@@ -71,7 +76,10 @@ describe('BookDetailsPage', () => {
     bookDetailsFixture.detectChanges();
   }
 
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+  });
 
   it('renders book details and availability', async () => {
     await configureBookDetailsTest();
@@ -82,6 +90,25 @@ describe('BookDetailsPage', () => {
     expect(renderedBookDetails).toContain('Fantasy');
     expect(renderedBookDetails).toContain('Borrowed');
     expect(renderedBookDetails).toContain('A great adventure.');
+  });
+
+  it('reloads localized book details when the language changes', async () => {
+    await configureBookDetailsTest();
+    const ukrainianBook: Book = {
+      ...selectedBook,
+      title: 'Гобіт',
+      author: 'Дж. Р. Р. Толкін',
+      genre: { ...selectedBook.genre, name: 'Фентезі' },
+    };
+    getBookSpy.mockReturnValueOnce(of(ukrainianBook));
+
+    TestBed.inject(LanguageService).setLanguage('uk');
+    bookDetailsFixture.detectChanges();
+
+    expect(getBookSpy).toHaveBeenLastCalledWith('book-1', 'uk');
+    expect(
+      (bookDetailsFixture.nativeElement as HTMLElement).textContent,
+    ).toContain('Гобіт');
   });
 
   it('shows loading and error states', async () => {

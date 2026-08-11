@@ -16,6 +16,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BookStatus } from '../../models/catalog.models';
 import {
   CreateReservationRequest,
@@ -40,7 +41,7 @@ const validTelegramUsername = (
 
 @Component({
   selector: 'app-reservation-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './reservation-form.html',
   styleUrl: './reservation-form.scss',
 })

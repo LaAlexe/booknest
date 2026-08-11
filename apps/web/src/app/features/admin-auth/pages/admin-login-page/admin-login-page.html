@@ -1,9 +1,9 @@
 <section class="login-card">
-  <p class="eyebrow">Administration</p>
-  <h1>Sign in to BookNest</h1>
+  <p class="eyebrow">{{ 'common.administration' | translate }}</p>
+  <h1>{{ 'auth.title' | translate }}</h1>
 
   <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" novalidate>
-    <label for="admin-email">Email</label>
+    <label for="admin-email">{{ 'auth.email' | translate }}</label>
     <input
       id="admin-email"
       type="email"
@@ -11,10 +11,10 @@
       autocomplete="username"
     />
     @if (shouldShowEmailError()) {
-    <p class="field-error">Enter a valid email address.</p>
+    <p class="field-error">{{ 'auth.emailError' | translate }}</p>
     }
 
-    <label for="admin-password">Password</label>
+    <label for="admin-password">{{ 'auth.password' | translate }}</label>
     <input
       id="admin-password"
       type="password"
@@ -22,17 +22,17 @@
       autocomplete="current-password"
     />
     @if (shouldShowPasswordError()) {
-    <p class="field-error">Enter your password (at least 12 characters).</p>
+    <p class="field-error">{{ 'auth.passwordError' | translate }}</p>
     } @if (hasInvalidCredentials()) {
-    <p class="form-error" role="alert">Invalid email or password.</p>
-    } @else if (hasLoginError()) {
     <p class="form-error" role="alert">
-      We couldn't sign you in. Please try again.
+      {{ 'auth.invalidCredentials' | translate }}
     </p>
+    } @else if (hasLoginError()) {
+    <p class="form-error" role="alert">{{ 'auth.loginError' | translate }}</p>
     }
 
     <button type="submit" [disabled]="isSubmitting()">
-      {{ isSubmitting() ? 'Signing in…' : 'Sign in' }}
+      {{ (isSubmitting() ? 'auth.signingIn' : 'auth.signIn') | translate }}
     </button>
   </form>
 </section>

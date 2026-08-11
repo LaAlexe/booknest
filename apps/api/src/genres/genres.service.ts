@@ -1,25 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ContentLocale } from '@prisma/client';
+import {
+  requestedContentLocales,
+  selectContentTranslation,
+} from '../content-localization/select-content-translation';
 import { PrismaService } from '../database/prisma.service';
 
-const publicGenreSelect = Prisma.validator<Prisma.GenreSelect>()({
-  id: true,
-  name: true,
-  slug: true,
-});
-
-export type PublicGenre = Prisma.GenreGetPayload<{
-  select: typeof publicGenreSelect;
-}>;
+export interface PublicGenre {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 @Injectable()
 export class GenresService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  findAll(): Promise<PublicGenre[]> {
-    return this.prismaService.genre.findMany({
-      select: publicGenreSelect,
-      orderBy: { name: 'asc' },
+  async findAll(
+    locale: ContentLocale = ContentLocale.en,
+  ): Promise<PublicGenre[]> {
+    const genres = await this.prismaService.genre.findMany({
+      select: {
+        id: true,
+        slug: true,
+        translations: {
+          where: { locale: { in: requestedContentLocales(locale) } },
+          select: { locale: true, name: true },
+        },
+      },
+      orderBy: { slug: 'asc' },
     });
+    return genres
+      .map((genre) => ({
+        id: genre.id,
+        slug: genre.slug,
+        name: selectContentTranslation(genre.translations, locale).name,
+      }))
+      .sort((firstGenre, secondGenre) =>
+        firstGenre.name.localeCompare(secondGenre.name, locale),
+      );
   }
 }

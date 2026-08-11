@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Book, BookStatus, ReservationStatus } from '@prisma/client';
+import {
+  Book,
+  BookStatus,
+  ContentLocale,
+  ReservationStatus,
+} from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -33,8 +38,13 @@ describe('Reservation concurrency (database e2e)', () => {
 
     const testGenre = await prismaService.genre.create({
       data: {
-        name: `Reservation test ${randomUUID()}`,
         slug: `reservation-test-${randomUUID()}`,
+        translations: {
+          create: {
+            locale: ContentLocale.en,
+            name: `Reservation test ${randomUUID()}`,
+          },
+        },
       },
     });
     testGenreId = testGenre.id;
@@ -143,10 +153,15 @@ describe('Reservation concurrency (database e2e)', () => {
   function createTestBook(isArchived = false): Promise<Book> {
     return prismaService.book.create({
       data: {
-        title: `Reservation test book ${randomUUID()}`,
-        author: 'BookNest test',
         genreId: testGenreId,
         isArchived,
+        translations: {
+          create: {
+            locale: ContentLocale.en,
+            title: `Reservation test book ${randomUUID()}`,
+            author: 'BookNest test',
+          },
+        },
       },
     });
   }

@@ -1,96 +1,161 @@
-import { BookStatus, PrismaClient } from '@prisma/client';
+import { BookStatus, ContentLocale, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 const genres = [
-  { name: 'Fantasy', slug: 'fantasy' },
-  { name: 'Science Fiction', slug: 'science-fiction' },
-  { name: 'Mystery', slug: 'mystery' },
-  { name: 'Thriller', slug: 'thriller' },
-  { name: 'Detective', slug: 'detective' },
-  { name: 'Romance', slug: 'romance' },
-  { name: 'Contemporary Fiction', slug: 'contemporary-fiction' },
-  { name: 'Historical Fiction', slug: 'historical-fiction' },
-  { name: 'Classics', slug: 'classics' },
-  { name: 'Horror', slug: 'horror' },
-  { name: 'Adventure', slug: 'adventure' },
-  { name: 'Drama', slug: 'drama' },
-  { name: 'Non-fiction', slug: 'non-fiction' },
-  { name: 'Biography', slug: 'biography' },
-  { name: 'Memoir', slug: 'memoir' },
-  { name: 'Psychology', slug: 'psychology' },
-  { name: 'Self-development', slug: 'self-development' },
-  { name: 'History', slug: 'history' },
-  { name: 'Philosophy', slug: 'philosophy' },
-  { name: 'Business', slug: 'business' },
-  { name: 'Technology', slug: 'technology' },
+  { slug: 'fantasy', en: 'Fantasy', uk: 'Фентезі' },
+  { slug: 'science-fiction', en: 'Science Fiction', uk: 'Наукова фантастика' },
+  { slug: 'mystery', en: 'Mystery', uk: 'Містика' },
+  { slug: 'thriller', en: 'Thriller', uk: 'Трилер' },
+  { slug: 'detective', en: 'Detective', uk: 'Детектив' },
+  { slug: 'romance', en: 'Romance', uk: 'Романтика' },
+  {
+    slug: 'contemporary-fiction',
+    en: 'Contemporary Fiction',
+    uk: 'Сучасна проза',
+  },
+  {
+    slug: 'historical-fiction',
+    en: 'Historical Fiction',
+    uk: 'Історична проза',
+  },
+  { slug: 'classics', en: 'Classics', uk: 'Класика' },
+  { slug: 'horror', en: 'Horror', uk: 'Жахи' },
+  { slug: 'adventure', en: 'Adventure', uk: 'Пригоди' },
+  { slug: 'drama', en: 'Drama', uk: 'Драма' },
+  { slug: 'non-fiction', en: 'Non-fiction', uk: 'Нон-фікшн' },
+  { slug: 'biography', en: 'Biography', uk: 'Біографія' },
+  { slug: 'memoir', en: 'Memoir', uk: 'Мемуари' },
+  { slug: 'psychology', en: 'Psychology', uk: 'Психологія' },
+  { slug: 'self-development', en: 'Self-development', uk: 'Саморозвиток' },
+  { slug: 'history', en: 'History', uk: 'Історія' },
+  { slug: 'philosophy', en: 'Philosophy', uk: 'Філософія' },
+  { slug: 'business', en: 'Business', uk: 'Бізнес' },
+  { slug: 'technology', en: 'Technology', uk: 'Технології' },
 ] as const;
 
 const books = [
   {
-    title: 'The Hobbit',
-    author: 'J. R. R. Tolkien',
-    description: 'A reluctant hobbit sets out on an unexpected journey.',
     genreSlug: 'fantasy',
+    en: {
+      title: 'The Hobbit',
+      author: 'J. R. R. Tolkien',
+      description: 'A reluctant hobbit sets out on an unexpected journey.',
+    },
+    uk: {
+      title: 'Гобіт',
+      author: 'Дж. Р. Р. Толкін',
+      description: 'Гобіт мимоволі вирушає в несподівану подорож.',
+    },
   },
   {
-    title: 'A Wizard of Earthsea',
-    author: 'Ursula K. Le Guin',
-    description: 'A young wizard learns the cost of power and pride.',
     genreSlug: 'fantasy',
+    en: {
+      title: 'A Wizard of Earthsea',
+      author: 'Ursula K. Le Guin',
+      description: 'A young wizard learns the cost of power and pride.',
+    },
+    uk: {
+      title: 'Чарівник Земномор’я',
+      author: 'Урсула К. Ле Ґуїн',
+      description: 'Молодий чарівник пізнає ціну сили та гордості.',
+    },
   },
   {
-    title: 'The Left Hand of Darkness',
-    author: 'Ursula K. Le Guin',
-    description: 'An envoy visits a world without fixed gender.',
     genreSlug: 'science-fiction',
+    en: {
+      title: 'The Left Hand of Darkness',
+      author: 'Ursula K. Le Guin',
+      description: 'An envoy visits a world without fixed gender.',
+    },
+    uk: {
+      title: 'Ліва рука темряви',
+      author: 'Урсула К. Ле Ґуїн',
+      description: 'Посланець відвідує світ без фіксованої статі.',
+    },
   },
   {
-    title: 'The Murder of Roger Ackroyd',
-    author: 'Agatha Christie',
-    description: 'Hercule Poirot investigates a village murder.',
     genreSlug: 'mystery',
+    en: {
+      title: 'The Murder of Roger Ackroyd',
+      author: 'Agatha Christie',
+      description: 'Hercule Poirot investigates a village murder.',
+    },
+    uk: {
+      title: 'Убивство Роджера Екройда',
+      author: 'Аґата Крісті',
+      description: 'Еркюль Пуаро розслідує вбивство в селі.',
+    },
   },
 ] as const;
 
 async function main(): Promise<void> {
   const genreIds = new Map<string, string>();
-
   for (const genre of genres) {
     const savedGenre = await prisma.genre.upsert({
       where: { slug: genre.slug },
-      update: { name: genre.name },
-      create: genre,
+      update: {},
+      create: { slug: genre.slug },
       select: { id: true, slug: true },
     });
-
+    await Promise.all([
+      upsertGenreTranslation(savedGenre.id, ContentLocale.en, genre.en),
+      upsertGenreTranslation(savedGenre.id, ContentLocale.uk, genre.uk),
+    ]);
     genreIds.set(savedGenre.slug, savedGenre.id);
   }
 
   for (const book of books) {
     const genreId = genreIds.get(book.genreSlug);
-
     if (!genreId) {
       throw new Error(`Missing seeded genre: ${book.genreSlug}`);
     }
-
-    const existingBook = await prisma.book.findFirst({
-      where: { title: book.title, author: book.author, genreId },
-      select: { id: true },
+    const existingTranslation = await prisma.bookTranslation.findFirst({
+      where: {
+        locale: ContentLocale.en,
+        title: book.en.title,
+        author: book.en.author,
+        book: { genreId },
+      },
+      select: { bookId: true },
     });
-
-    if (!existingBook) {
-      await prisma.book.create({
-        data: {
-          title: book.title,
-          author: book.author,
-          description: book.description,
-          genreId,
-          status: BookStatus.AVAILABLE,
-        },
-      });
-    }
+    const bookId = existingTranslation
+      ? existingTranslation.bookId
+      : (
+          await prisma.book.create({
+            data: { genreId, status: BookStatus.AVAILABLE },
+            select: { id: true },
+          })
+        ).id;
+    await Promise.all([
+      upsertBookTranslation(bookId, ContentLocale.en, book.en),
+      upsertBookTranslation(bookId, ContentLocale.uk, book.uk),
+    ]);
   }
+}
+
+function upsertGenreTranslation(
+  genreId: string,
+  locale: ContentLocale,
+  name: string,
+) {
+  return prisma.genreTranslation.upsert({
+    where: { genreId_locale: { genreId, locale } },
+    update: { name },
+    create: { genreId, locale, name },
+  });
+}
+
+function upsertBookTranslation(
+  bookId: string,
+  locale: ContentLocale,
+  translation: { title: string; author: string; description: string },
+) {
+  return prisma.bookTranslation.upsert({
+    where: { bookId_locale: { bookId, locale } },
+    update: translation,
+    create: { bookId, locale, ...translation },
+  });
 }
 
 main()

@@ -1,10 +1,11 @@
-import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { catchError, EMPTY, finalize, Observable } from 'rxjs';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AdminNavigation } from '../../../../shared/components/admin-navigation/admin-navigation';
+import { LocalizedDatePipe } from '../../../../shared/pipes/localized-date.pipe';
 import {
   AdminReservation,
   ReservationStatus,
@@ -15,7 +16,7 @@ type ReservationAction = 'borrow' | 'return' | 'cancel';
 
 @Component({
   selector: 'app-admin-reservations-page',
-  imports: [AdminNavigation, DatePipe, FormsModule],
+  imports: [AdminNavigation, FormsModule, LocalizedDatePipe, TranslatePipe],
   templateUrl: './admin-reservations-page.html',
   styleUrl: './admin-reservations-page.scss',
 })
@@ -24,6 +25,7 @@ export class AdminReservationsPage implements OnInit {
     AdminReservationsApiService,
   );
   private readonly destroyRef = inject(DestroyRef);
+  private readonly translateService = inject(TranslateService);
   private readonly pageSize = 20;
 
   protected readonly reservations = signal<AdminReservation[]>([]);
@@ -84,7 +86,9 @@ export class AdminReservationsPage implements OnInit {
       return;
     }
     const cancellationReason = window.prompt(
-      `Cancel the reservation for “${reservation.book.title}”? Add an optional reason:`,
+      this.translateService.instant('admin.reservations.cancelPrompt', {
+        title: reservation.book.title,
+      }),
       '',
     );
     if (cancellationReason === null) {
@@ -111,22 +115,22 @@ export class AdminReservationsPage implements OnInit {
   private defaultActionLabel(action: ReservationAction): string {
     switch (action) {
       case 'borrow':
-        return 'Mark as borrowed';
+        return 'admin.reservations.markBorrowed';
       case 'return':
-        return 'Mark as returned';
+        return 'admin.reservations.markReturned';
       case 'cancel':
-        return 'Cancel';
+        return 'admin.reservations.cancel';
     }
   }
 
   private pendingActionLabel(action: ReservationAction): string {
     switch (action) {
       case 'borrow':
-        return 'Marking borrowed…';
+        return 'admin.reservations.markingBorrowed';
       case 'return':
-        return 'Marking returned…';
+        return 'admin.reservations.markingReturned';
       case 'cancel':
-        return 'Cancelling…';
+        return 'admin.reservations.cancelling';
     }
   }
 

@@ -1,6 +1,8 @@
 import { Transform, Type } from 'class-transformer';
+import { ContentLocale } from '@prisma/client';
 import {
   IsInt,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -14,6 +16,10 @@ const trimString = ({ value: inputValue }: { value: unknown }): unknown =>
   typeof inputValue === 'string' ? inputValue.trim() : inputValue;
 
 export class ListBooksQueryDto {
+  @IsOptional()
+  @IsEnum(ContentLocale)
+  locale: ContentLocale = ContentLocale.en;
+
   @Type(() => Number)
   @IsInt()
   @Min(1)

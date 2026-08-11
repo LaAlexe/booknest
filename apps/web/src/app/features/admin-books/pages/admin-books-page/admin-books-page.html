@@ -2,33 +2,37 @@
   <app-admin-navigation />
   <div class="heading">
     <div>
-      <p class="eyebrow">Administration</p>
-      <h1>Books</h1>
+      <p class="eyebrow">{{ 'common.administration' | translate }}</p>
+      <h1>{{ 'admin.books.title' | translate }}</h1>
     </div>
-    <a class="primary-action" routerLink="/admin/books/new">Add book</a>
+    <a class="primary-action" routerLink="/admin/books/new"
+      >{{ 'admin.books.add' | translate }}</a
+    >
   </div>
 
   @if (isLoading()) {
-  <div class="state" role="status">Loading books…</div>
+  <div class="state" role="status">{{ 'admin.books.loading' | translate }}</div>
   } @else if (hasLoadError()) {
-  <div class="state state--error" role="alert">We couldn't load the books.</div>
+  <div class="state state--error" role="alert">
+    {{ 'admin.books.loadError' | translate }}
+  </div>
   } @else if (books().length === 0) {
-  <div class="state">No books have been added yet.</div>
+  <div class="state">{{ 'admin.books.empty' | translate }}</div>
   } @else { @if (hasArchiveError()) {
   <p class="archive-error" role="alert">
-    We couldn't archive the book. Refresh and try again.
+    {{ 'admin.books.archiveError' | translate }}
   </p>
   }
   <div class="table-wrapper">
     <table>
       <thead>
         <tr>
-          <th>Title</th>
-          <th>Author</th>
-          <th>Genre</th>
-          <th>Status</th>
-          <th>Archived</th>
-          <th>Actions</th>
+          <th>{{ 'admin.books.titleColumn' | translate }}</th>
+          <th>{{ 'admin.books.authorColumn' | translate }}</th>
+          <th>{{ 'admin.books.genreColumn' | translate }}</th>
+          <th>{{ 'admin.books.statusColumn' | translate }}</th>
+          <th>{{ 'admin.books.archivedColumn' | translate }}</th>
+          <th>{{ 'common.actions' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -37,20 +41,25 @@
           <td>{{ book.title }}</td>
           <td>{{ book.author }}</td>
           <td>{{ book.genre.name }}</td>
-          <td>{{ book.status }}</td>
-          <td>{{ book.isArchived ? 'Yes' : 'No' }}</td>
+          <td>{{ 'common.status.' + book.status | translate }}</td>
+          <td>
+            {{ (book.isArchived ? 'common.yes' : 'common.no') | translate }}
+          </td>
           <td class="actions">
-            <a [routerLink]="['/admin/books', book.id, 'edit']">Edit</a>
+            <a [routerLink]="['/admin/books', book.id, 'edit']"
+              >{{ 'admin.books.editAction' | translate }}</a
+            >
             @if (canArchive(book)) {
             <button
               type="button"
               [disabled]="archivingBookId() !== null"
               (click)="archiveBook(book)"
             >
-              {{ archivingBookId() === book.id ? 'Archiving…' : 'Archive' }}
+              {{ (archivingBookId() === book.id ? 'admin.books.archiving' :
+              'admin.books.archiveAction') | translate }}
             </button>
             } @else if (!book.isArchived) {
-            <span class="muted">Unavailable</span>
+            <span class="muted">{{ 'common.unavailable' | translate }}</span>
             }
           </td>
         </tr>

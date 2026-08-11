@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   catchError,
@@ -17,12 +18,17 @@ import {
   forkJoin,
   map,
   Observable,
+  combineLatest,
   switchMap,
   tap,
 } from 'rxjs';
 import { AvailabilityBadge } from '../../components/availability-badge/availability-badge';
 import { Genre, PaginatedBooks } from '../../models/catalog.models';
 import { CatalogApiService } from '../../services/catalog-api.service';
+import {
+  LanguageService,
+  SupportedLanguage,
+} from '../../../../shared/services/language.service';
 
 interface CatalogFilters {
   searchText: string;
@@ -32,7 +38,7 @@ interface CatalogFilters {
 
 @Component({
   selector: 'app-catalog-page',
-  imports: [AvailabilityBadge, ReactiveFormsModule, RouterLink],
+  imports: [AvailabilityBadge, ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './catalog-page.html',
   styleUrl: './catalog-page.scss',
 })
@@ -41,6 +47,7 @@ export class CatalogPage implements OnInit {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly languageService = inject(LanguageService);
 
   protected readonly searchControl = new FormControl('', {
     nonNullable: true,
@@ -55,13 +62,6 @@ export class CatalogPage implements OnInit {
   protected readonly shouldDisplayPagination = computed(
     () => (this.catalogPage()?.meta.totalPages ?? 0) > 1,
   );
-  protected readonly bookCountLabel = computed(() => {
-    const totalBooks = this.catalogPage()?.meta.total;
-    if (totalBooks === undefined) {
-      return '';
-    }
-    return `${totalBooks} ${totalBooks === 1 ? 'book' : 'books'}`;
-  });
 
   ngOnInit(): void {
     this.subscribeToCatalogFilters();
@@ -76,14 +76,22 @@ export class CatalogPage implements OnInit {
   }
 
   private subscribeToCatalogFilters(): void {
-    this.activatedRoute.queryParamMap
+    combineLatest([
+      this.activatedRoute.queryParamMap,
+      this.languageService.languageChanges,
+    ])
       .pipe(
-        map((queryParameters) => this.getCatalogFilters(queryParameters)),
-        tap((catalogFilters) => {
+        map(([queryParameters, locale]) => ({
+          catalogFilters: this.getCatalogFilters(queryParameters),
+          locale,
+        })),
+        tap(({ catalogFilters }) => {
           this.hasLoadError.set(false);
           this.synchronizeFilterControls(catalogFilters);
         }),
-        switchMap((catalogFilters) => this.loadCatalog(catalogFilters)),
+        switchMap(({ catalogFilters, locale }) =>
+          this.loadCatalog(catalogFilters, locale),
+        ),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
@@ -123,7 +131,10 @@ export class CatalogPage implements OnInit {
     });
   }
 
-  private loadCatalog(catalogFilters: CatalogFilters): Observable<{
+  private loadCatalog(
+    catalogFilters: CatalogFilters,
+    locale: SupportedLanguage,
+  ): Observable<{
     catalogPage: PaginatedBooks;
     availableGenres: Genre[];
   }> {
@@ -134,8 +145,9 @@ export class CatalogPage implements OnInit {
           q: catalogFilters.searchText || undefined,
           genre: catalogFilters.genreSlug || undefined,
           page: catalogFilters.pageNumber,
+          locale,
         }),
-        availableGenres: this.catalogApiService.getGenres(),
+        availableGenres: this.catalogApiService.getGenres(locale),
       }).pipe(
         catchError(() => {
           this.catalogPage.set(null);

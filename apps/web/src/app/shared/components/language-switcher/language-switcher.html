@@ -1,0 +1,22 @@
+<div
+  class="language-switcher"
+  role="group"
+  [attr.aria-label]="'common.language.label' | translate"
+>
+  <button
+    type="button"
+    [class.is-active]="currentLanguage() === 'en'"
+    [attr.aria-pressed]="currentLanguage() === 'en'"
+    (click)="setLanguage('en')"
+  >
+    EN
+  </button>
+  <button
+    type="button"
+    [class.is-active]="currentLanguage() === 'uk'"
+    [attr.aria-pressed]="currentLanguage() === 'uk'"
+    (click)="setLanguage('uk')"
+  >
+    UA
+  </button>
+</div>

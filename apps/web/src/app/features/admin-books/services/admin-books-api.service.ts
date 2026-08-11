@@ -2,20 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AdminBook, AdminBookInput } from '../models/admin-book.models';
+import { SupportedLanguage } from '../../../shared/services/language.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdminBooksApiService {
   private readonly httpClient = inject(HttpClient);
   private readonly baseUrl = '/api/v1/admin/books';
 
-  getBooks(): Observable<AdminBook[]> {
+  getBooks(locale: SupportedLanguage = 'en'): Observable<AdminBook[]> {
     return this.httpClient.get<AdminBook[]>(this.baseUrl, {
+      params: { locale },
       withCredentials: true,
     });
   }
 
-  getBook(bookId: string): Observable<AdminBook> {
+  getBook(
+    bookId: string,
+    locale: SupportedLanguage = 'en',
+  ): Observable<AdminBook> {
     return this.httpClient.get<AdminBook>(`${this.baseUrl}/${bookId}`, {
+      params: { locale },
       withCredentials: true,
     });
   }

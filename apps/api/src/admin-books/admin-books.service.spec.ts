@@ -1,5 +1,5 @@
 import { ConflictException } from '@nestjs/common';
-import { BookStatus } from '@prisma/client';
+import { BookStatus, ContentLocale } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../database/prisma.service';
 import { AdminBooksService } from './admin-books.service';
@@ -8,16 +8,31 @@ describe('AdminBooksService', () => {
   const genreId = '87de0284-9b75-4395-9bd8-1217e374ef78';
   const availableBook = {
     id: '6c06bb7b-5294-4a22-b37c-d69214c08062',
-    title: 'The Hobbit',
-    author: 'J. R. R. Tolkien',
-    description: null,
     coverUrl: null,
     status: BookStatus.AVAILABLE,
     genreId,
     isArchived: false,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    genre: { id: genreId, name: 'Fantasy', slug: 'fantasy' },
+    translations: [
+      {
+        locale: ContentLocale.en,
+        title: 'The Hobbit',
+        author: 'J. R. R. Tolkien',
+        description: null,
+      },
+      {
+        locale: ContentLocale.uk,
+        title: 'Гобіт',
+        author: 'Дж. Р. Р. Толкін',
+        description: null,
+      },
+    ],
+    genre: {
+      id: genreId,
+      slug: 'fantasy',
+      translations: [{ locale: ContentLocale.en, name: 'Fantasy' }],
+    },
   };
   const findBooks = jest.fn((...methodArguments: unknown[]): Promise<unknown> =>
     Promise.resolve(methodArguments),
@@ -79,39 +94,160 @@ describe('AdminBooksService', () => {
     expect(findManyArguments.where).toBeUndefined();
   });
 
-  it('creates an available book with validated catalog fields', async () => {
+  it('creates an English-only available book', async () => {
+    countGenres.mockResolvedValue(1);
+    createBook.mockResolvedValue(availableBook);
+
+    await adminBooksService.create({
+      translations: {
+        en: {
+          title: 'The Hobbit',
+          author: 'J. R. R. Tolkien',
+          description: null,
+        },
+      },
+      coverUrl: null,
+      genreId,
+    });
+
+    const createArguments = createBook.mock.calls[0]?.[0] as {
+      data: { translations: { create: Array<{ locale: ContentLocale }> } };
+    };
+    expect(createArguments.data.translations.create).toHaveLength(1);
+    expect(createArguments.data.translations.create[0]?.locale).toBe(
+      ContentLocale.en,
+    );
+  });
+
+  it('creates a book with independent English and Ukrainian content', async () => {
     countGenres.mockResolvedValue(1);
     createBook.mockResolvedValue(availableBook);
     const createBookInput = {
-      title: availableBook.title,
-      author: availableBook.author,
-      description: null,
+      translations: {
+        en: {
+          title: 'The Hobbit',
+          author: 'J. R. R. Tolkien',
+          description: null,
+        },
+        uk: {
+          title: 'Гобіт',
+          author: 'Дж. Р. Р. Толкін',
+          description: null,
+        },
+      },
       coverUrl: null,
       genreId,
     };
 
     await expect(adminBooksService.create(createBookInput)).resolves.toEqual(
-      availableBook,
+      expect.objectContaining({ title: 'The Hobbit' }),
     );
-    expect(createBook).toHaveBeenCalledWith(
-      expect.objectContaining({ data: createBookInput }),
-    );
+    const createArguments = createBook.mock.calls[0]?.[0] as {
+      data: {
+        genreId: string;
+        translations: {
+          create: Array<{ locale: ContentLocale; title: string }>;
+        };
+      };
+    };
+    expect(createArguments.data.genreId).toBe(genreId);
+    expect(createArguments.data.translations.create).toEqual([
+      expect.objectContaining({
+        locale: ContentLocale.en,
+        title: 'The Hobbit',
+      }),
+      expect.objectContaining({ locale: ContentLocale.uk, title: 'Гобіт' }),
+    ]);
+  });
+
+  it('returns both translations in admin book details', async () => {
+    findBook.mockResolvedValue(availableBook);
+
+    const bookDetails = await adminBooksService.findOne(availableBook.id);
+
+    expect(bookDetails.translations.en.title).toBe('The Hobbit');
+    expect(bookDetails.translations.uk?.title).toBe('Гобіт');
+  });
+
+  it('uses requested localized content in admin read responses', async () => {
+    findBook.mockResolvedValue({
+      ...availableBook,
+      genre: {
+        ...availableBook.genre,
+        translations: [
+          ...availableBook.genre.translations,
+          { locale: ContentLocale.uk, name: 'Фентезі' },
+        ],
+      },
+    });
+
+    await expect(
+      adminBooksService.findOne(availableBook.id, ContentLocale.uk),
+    ).resolves.toMatchObject({ title: 'Гобіт', genre: { name: 'Фентезі' } });
   });
 
   it('updates catalog fields without changing status', async () => {
     findBook.mockResolvedValue(availableBook);
-    updateBook.mockResolvedValue({ ...availableBook, title: 'Updated title' });
-
-    await adminBooksService.update(availableBook.id, {
-      title: 'Updated title',
+    updateBook.mockResolvedValue({
+      ...availableBook,
+      translations: [
+        { ...availableBook.translations[0], title: 'Updated title' },
+      ],
     });
 
-    expect(updateBook).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: { title: 'Updated title' },
-      }),
-    );
+    await adminBooksService.update(availableBook.id, {
+      translations: {
+        en: { title: 'Updated title', author: 'Author', description: null },
+      },
+    });
+
+    const updateArguments = updateBook.mock.calls[0]?.[0] as {
+      data: { translations: unknown };
+    };
+    expect(updateArguments.data.translations).toBeDefined();
   });
+
+  it.each([
+    ['adds', 'Гобіт'],
+    ['edits', 'Гобіт: оновлене видання'],
+  ])(
+    '%s a Ukrainian translation through the locale upsert',
+    async (_actionDescription, ukrainianTitle) => {
+      findBook.mockResolvedValue(availableBook);
+      updateBook.mockResolvedValue(availableBook);
+
+      await adminBooksService.update(availableBook.id, {
+        translations: {
+          uk: {
+            title: ukrainianTitle,
+            author: 'Дж. Р. Р. Толкін',
+            description: null,
+          },
+        },
+      });
+
+      const updateArguments = updateBook.mock.calls[0]?.[0] as {
+        data: {
+          translations: {
+            upsert: Array<{
+              where: {
+                bookId_locale: { bookId: string; locale: ContentLocale };
+              };
+              create: { title: string };
+              update: { title: string };
+            }>;
+          };
+        };
+      };
+      const ukrainianUpsert = updateArguments.data.translations.upsert[0];
+      expect(ukrainianUpsert?.where.bookId_locale).toEqual({
+        bookId: availableBook.id,
+        locale: ContentLocale.uk,
+      });
+      expect(ukrainianUpsert?.create.title).toBe(ukrainianTitle);
+      expect(ukrainianUpsert?.update.title).toBe(ukrainianTitle);
+    },
+  );
 
   it('archives an available book without deleting it', async () => {
     updateBooks.mockResolvedValue({ count: 1 });

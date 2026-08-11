@@ -3,7 +3,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BookStatus, Prisma, ReservationStatus } from '@prisma/client';
+import {
+  BookStatus,
+  ContentLocale,
+  Prisma,
+  ReservationStatus,
+} from '@prisma/client';
+import { selectContentTranslation } from '../content-localization/select-content-translation';
 import { PrismaService } from '../database/prisma.service';
 import { CancelAdminReservationDto } from './dto/cancel-admin-reservation.dto';
 import { ListAdminReservationsQueryDto } from './dto/list-admin-reservations-query.dto';
@@ -20,13 +26,24 @@ const adminReservationSelect = Prisma.validator<Prisma.ReservationSelect>()({
   cancellationReason: true,
   handledByAdminId: true,
   book: {
-    select: { id: true, title: true, author: true, status: true },
+    select: {
+      id: true,
+      status: true,
+      translations: {
+        where: { locale: ContentLocale.en },
+        select: { locale: true, title: true, author: true },
+      },
+    },
   },
 });
 
-export type AdminReservation = Prisma.ReservationGetPayload<{
+type StoredAdminReservation = Prisma.ReservationGetPayload<{
   select: typeof adminReservationSelect;
 }>;
+
+export type AdminReservation = Omit<StoredAdminReservation, 'book'> & {
+  book: { id: string; title: string; author: string; status: BookStatus };
+};
 
 export interface PaginatedAdminReservations {
   data: AdminReservation[];
@@ -58,10 +75,15 @@ export class AdminReservationsService {
       ...(query.q
         ? {
             book: {
-              OR: [
-                { title: { contains: query.q, mode: 'insensitive' } },
-                { author: { contains: query.q, mode: 'insensitive' } },
-              ],
+              translations: {
+                some: {
+                  locale: ContentLocale.en,
+                  OR: [
+                    { title: { contains: query.q, mode: 'insensitive' } },
+                    { author: { contains: query.q, mode: 'insensitive' } },
+                  ],
+                },
+              },
             },
           }
         : {}),
@@ -80,7 +102,9 @@ export class AdminReservationsService {
       ]);
 
     return {
-      data: reservations,
+      data: reservations.map((reservation) =>
+        this.toAdminReservation(reservation),
+      ),
       meta: {
         page: query.page,
         pageSize: query.pageSize,
@@ -98,7 +122,7 @@ export class AdminReservationsService {
     if (!reservation) {
       throw new NotFoundException('Reservation not found');
     }
-    return reservation;
+    return this.toAdminReservation(reservation);
   }
 
   markBorrowed(
@@ -184,11 +208,31 @@ export class AdminReservationsService {
         this.throwTransitionConflict();
       }
 
-      return transactionClient.reservation.findUniqueOrThrow({
-        where: { id: reservationId },
-        select: adminReservationSelect,
-      });
+      const updatedReservation =
+        await transactionClient.reservation.findUniqueOrThrow({
+          where: { id: reservationId },
+          select: adminReservationSelect,
+        });
+      return this.toAdminReservation(updatedReservation);
     });
+  }
+
+  private toAdminReservation(
+    reservation: StoredAdminReservation,
+  ): AdminReservation {
+    const bookTranslation = selectContentTranslation(
+      reservation.book.translations,
+      ContentLocale.en,
+    );
+    return {
+      ...reservation,
+      book: {
+        id: reservation.book.id,
+        status: reservation.book.status,
+        title: bookTranslation.title,
+        author: bookTranslation.author,
+      },
+    };
   }
 
   private throwTransitionConflict(): never {

@@ -2,11 +2,12 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AdminAuthStore } from '../../../features/admin-auth/services/admin-auth.store';
 
 @Component({
   selector: 'app-admin-navigation',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './admin-navigation.html',
   styleUrl: './admin-navigation.scss',
 })

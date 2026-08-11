@@ -1,30 +1,42 @@
 <section class="reservation" aria-labelledby="reservation-heading">
   @if (successfulReservation(); as reservation) {
   <div class="message message--success" role="status">
-    <h2 id="reservation-heading">Reservation confirmed</h2>
+    <h2 id="reservation-heading">
+      {{ 'reservation.confirmedTitle' | translate }}
+    </h2>
     <p>
-      This book is reserved for {{ reservation.requesterName }}. Telegram:
+      {{ 'reservation.confirmedMessage' | translate: { requesterName:
+      reservation.requesterName } }}
       <strong>{{ reservation.telegramUsername }}</strong>
     </p>
   </div>
   } @else if (hasAvailabilityConflict()) {
   <div class="message message--unavailable" role="alert">
-    <h2 id="reservation-heading">No longer available</h2>
-    <p>Another reader reserved this book before your request completed.</p>
+    <h2 id="reservation-heading">
+      {{ 'reservation.conflictTitle' | translate }}
+    </h2>
+    <p>{{ 'reservation.conflictMessage' | translate }}</p>
   </div>
   } @else if (!isAvailable()) {
   <div class="message message--unavailable">
-    <h2 id="reservation-heading">Currently unavailable</h2>
-    <p>This book is {{ bookStatus().toLowerCase() }} and cannot be reserved.</p>
+    <h2 id="reservation-heading">
+      {{ 'reservation.unavailableTitle' | translate }}
+    </h2>
+    <p>
+      {{ 'reservation.unavailableMessage' | translate: { status:
+      ('common.status.' + bookStatus() | translate) } }}
+    </p>
   </div>
   } @else {
-  <h2 id="reservation-heading">Reserve this book</h2>
+  <h2 id="reservation-heading">{{ 'reservation.formTitle' | translate }}</h2>
   <form
     [formGroup]="reservationForm"
     (ngSubmit)="submitReservation()"
     novalidate
   >
-    <label for="requester-name">Your name</label>
+    <label for="requester-name"
+      >{{ 'reservation.nameLabel' | translate }}</label
+    >
     <input
       id="requester-name"
       type="text"
@@ -33,10 +45,12 @@
       autocomplete="name"
     />
     @if (shouldShowValidationError(reservationForm.controls.requesterName)) {
-    <p class="field-error">Enter your name (maximum 150 characters).</p>
+    <p class="field-error">{{ 'reservation.nameError' | translate }}</p>
     }
 
-    <label for="telegram-username">Telegram username</label>
+    <label for="telegram-username"
+      >{{ 'reservation.telegramLabel' | translate }}</label
+    >
     <input
       id="telegram-username"
       type="text"
@@ -45,18 +59,16 @@
       placeholder="@username"
     />
     @if (shouldShowValidationError(reservationForm.controls.telegramUsername)) {
-    <p class="field-error">
-      Enter 5–32 letters, numbers, or underscores, starting with a letter. The @
-      is optional.
-    </p>
+    <p class="field-error">{{ 'reservation.telegramError' | translate }}</p>
     } @if (hasSubmissionError()) {
     <p class="message message--error" role="alert">
-      We couldn't complete your reservation. Please try again.
+      {{ 'reservation.submitError' | translate }}
     </p>
     }
 
     <button type="submit" [disabled]="isSubmitting()">
-      {{ isSubmitting() ? 'Reserving…' : 'Reserve' }}
+      {{ (isSubmitting() ? 'reservation.reserving' : 'reservation.reserve') |
+      translate }}
     </button>
   </form>
   }

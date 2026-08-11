@@ -3,15 +3,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin, Observable, of } from 'rxjs';
 import { AdminNavigation } from '../../../../shared/components/admin-navigation/admin-navigation';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Genre } from '../../../catalog/models/catalog.models';
 import { CatalogApiService } from '../../../catalog/services/catalog-api.service';
+import { LanguageService } from '../../../../shared/services/language.service';
 import { AdminBookForm } from '../../components/admin-book-form/admin-book-form';
 import { AdminBook, AdminBookInput } from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
 
 @Component({
   selector: 'app-admin-book-editor-page',
-  imports: [AdminBookForm, AdminNavigation, RouterLink],
+  imports: [AdminBookForm, AdminNavigation, RouterLink, TranslatePipe],
   templateUrl: './admin-book-editor-page.html',
   styleUrl: './admin-book-editor-page.scss',
 })
@@ -21,6 +23,7 @@ export class AdminBookEditorPage implements OnInit {
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly languageService = inject(LanguageService);
   private readonly bookId = this.activatedRoute.snapshot.paramMap.get('bookId');
 
   protected readonly book = signal<AdminBook | null>(null);
@@ -33,11 +36,16 @@ export class AdminBookEditorPage implements OnInit {
 
   ngOnInit(): void {
     const bookRequest: Observable<AdminBook | null> = this.bookId
-      ? this.adminBooksApiService.getBook(this.bookId)
+      ? this.adminBooksApiService.getBook(
+          this.bookId,
+          this.languageService.currentLanguage(),
+        )
       : of(null);
     forkJoin({
       book: bookRequest,
-      genres: this.catalogApiService.getGenres(),
+      genres: this.catalogApiService.getGenres(
+        this.languageService.currentLanguage(),
+      ),
     })
       .pipe(
         takeUntilDestroyed(this.destroyRef),

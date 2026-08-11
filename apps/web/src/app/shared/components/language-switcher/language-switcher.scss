@@ -1,0 +1,21 @@
+.language-switcher {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+button {
+  background: transparent;
+  border: 1px solid #7b8983;
+  border-radius: 0.3rem;
+  color: inherit;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.35rem 0.5rem;
+}
+
+button.is-active {
+  background: #17634e;
+  border-color: #17634e;
+  color: #fff;
+}

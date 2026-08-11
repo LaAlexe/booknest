@@ -31,6 +31,7 @@ export interface PaginatedBooks {
 }
 
 export interface BookQuery {
+  locale?: 'en' | 'uk';
   q?: string;
   genre?: string;
   page?: number;

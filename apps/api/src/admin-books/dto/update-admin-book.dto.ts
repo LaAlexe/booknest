@@ -1,36 +1,19 @@
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
-  IsNotEmpty,
   IsOptional,
-  IsString,
   IsUrl,
   IsUUID,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
-import {
-  normalizeOptionalBookField,
-  trimRequiredBookField,
-} from './book-field-transforms';
+import { UpdateBookTranslationsDto } from './book-translations.dto';
+import { normalizeOptionalBookField } from './book-field-transforms';
 
 export class UpdateAdminBookDto {
-  @Transform(trimRequiredBookField)
   @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  title?: string;
-
-  @Transform(trimRequiredBookField)
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(255)
-  author?: string;
-
-  @Transform(normalizeOptionalBookField)
-  @IsOptional()
-  @IsString()
-  description?: string | null;
+  @ValidateNested()
+  @Type(() => UpdateBookTranslationsDto)
+  translations?: UpdateBookTranslationsDto;
 
   @Transform(normalizeOptionalBookField)
   @IsOptional()

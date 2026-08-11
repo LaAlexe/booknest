@@ -1,8 +1,11 @@
 <section class="admin-card">
   <app-admin-navigation />
-  <p class="eyebrow">Administration</p>
-  <h1>BookNest Admin</h1>
+  <p class="eyebrow">{{ 'common.administration' | translate }}</p>
+  <h1>{{ 'admin.home.title' | translate }}</h1>
   @if (admin(); as signedInAdmin) {
-  <p>Signed in as <strong>{{ signedInAdmin.email }}</strong></p>
+  <p>
+    {{ 'admin.home.signedInAs' | translate }}
+    <strong>{{ signedInAdmin.email }}</strong>
+  </p>
   }
 </section>

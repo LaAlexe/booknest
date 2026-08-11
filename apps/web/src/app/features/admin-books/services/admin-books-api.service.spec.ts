@@ -22,7 +22,9 @@ describe('AdminBooksApiService', () => {
 
   it('uses authenticated admin book endpoints', () => {
     adminBooksApiService.getBooks().subscribe();
-    const listRequest = httpTestingController.expectOne('/api/v1/admin/books');
+    const listRequest = httpTestingController.expectOne(
+      '/api/v1/admin/books?locale=en',
+    );
     expect(listRequest.request.withCredentials).toBe(true);
     listRequest.flush([]);
 

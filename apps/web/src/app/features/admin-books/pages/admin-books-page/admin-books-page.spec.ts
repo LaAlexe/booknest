@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminAuthStore } from '../../../admin-auth/services/admin-auth.store';
 import { AdminBook } from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
@@ -15,6 +16,9 @@ const availableBook: AdminBook = {
   status: 'AVAILABLE',
   genreId: 'genre-1',
   genre: { id: 'genre-1', name: 'Fantasy', slug: 'fantasy' },
+  translations: {
+    en: { title: 'The Hobbit', author: 'J. R. R. Tolkien', description: null },
+  },
   isArchived: false,
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
@@ -32,6 +36,7 @@ describe('AdminBooksPage', () => {
       imports: [AdminBooksPage],
       providers: [
         provideRouter([]),
+        provideTranslationTesting(),
         {
           provide: AdminAuthStore,
           useValue: { logout: vi.fn(() => of({ success: true })) },

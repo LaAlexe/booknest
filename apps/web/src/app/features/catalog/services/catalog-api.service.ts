@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { SupportedLanguage } from '../../../shared/services/language.service';
 import {
   Book,
   BookQuery,
@@ -25,11 +26,15 @@ export class CatalogApiService {
     });
   }
 
-  getBook(bookId: string): Observable<Book> {
-    return this.httpClient.get<Book>(`${this.baseUrl}/books/${bookId}`);
+  getBook(bookId: string, locale: SupportedLanguage = 'en'): Observable<Book> {
+    return this.httpClient.get<Book>(`${this.baseUrl}/books/${bookId}`, {
+      params: { locale },
+    });
   }
 
-  getGenres(): Observable<Genre[]> {
-    return this.httpClient.get<Genre[]>(`${this.baseUrl}/genres`);
+  getGenres(locale: SupportedLanguage = 'en'): Observable<Genre[]> {
+    return this.httpClient.get<Genre[]>(`${this.baseUrl}/genres`, {
+      params: { locale },
+    });
   }
 }

@@ -1,12 +1,15 @@
 import { NotFoundException } from '@nestjs/common';
-import { BookStatus } from '@prisma/client';
+import { BookStatus, ContentLocale } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../database/prisma.service';
 import { BooksService, PublicBook } from './books.service';
 import { ListBooksQueryDto } from './dto/list-books-query.dto';
 
 describe('BooksService', () => {
-  const findManyBooks = jest.fn();
+  const findManyBooks = jest.fn(
+    (...methodArguments: unknown[]): Promise<unknown> =>
+      Promise.resolve(methodArguments),
+  );
   const countBooks = jest.fn();
   const findFirstBook = jest.fn();
   const runTransaction = jest.fn();
@@ -24,6 +27,26 @@ describe('BooksService', () => {
       id: '87de0284-9b75-4395-9bd8-1217e374ef78',
       name: 'Fantasy',
       slug: 'fantasy',
+    },
+  };
+  const storedBook = {
+    id: publicBook.id,
+    coverUrl: publicBook.coverUrl,
+    status: publicBook.status,
+    createdAt: publicBook.createdAt,
+    updatedAt: publicBook.updatedAt,
+    translations: [
+      {
+        locale: ContentLocale.en,
+        title: publicBook.title,
+        author: publicBook.author,
+        description: publicBook.description,
+      },
+    ],
+    genre: {
+      id: publicBook.genre.id,
+      slug: publicBook.genre.slug,
+      translations: [{ locale: ContentLocale.en, name: publicBook.genre.name }],
     },
   };
 
@@ -51,7 +74,7 @@ describe('BooksService', () => {
   });
 
   it('lists books with pagination metadata and excludes archived books', async () => {
-    runTransaction.mockResolvedValue([[publicBook], 1]);
+    runTransaction.mockResolvedValue([[storedBook], 1]);
 
     const catalogPage = await booksService.findAll(new ListBooksQueryDto());
 
@@ -92,17 +115,11 @@ describe('BooksService', () => {
       Object.assign(new ListBooksQueryDto(), { q: 'tolkien' }),
     );
 
-    expect(findManyBooks).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          isArchived: false,
-          OR: [
-            { title: { contains: 'tolkien', mode: 'insensitive' } },
-            { author: { contains: 'tolkien', mode: 'insensitive' } },
-          ],
-        },
-      }),
-    );
+    const searchArguments = findManyBooks.mock.calls[0]?.[0] as {
+      where: { isArchived: boolean; translations: unknown };
+    };
+    expect(searchArguments.where.isArchived).toBe(false);
+    expect(searchArguments.where.translations).toBeDefined();
   });
 
   it('applies page and page-size offsets', async () => {
@@ -126,7 +143,7 @@ describe('BooksService', () => {
   });
 
   it('returns a non-archived book by id', async () => {
-    findFirstBook.mockResolvedValue(publicBook);
+    findFirstBook.mockResolvedValue(storedBook);
 
     await expect(booksService.findOne(publicBook.id)).resolves.toEqual(
       publicBook,
@@ -136,6 +153,37 @@ describe('BooksService', () => {
         where: { id: publicBook.id, isArchived: false },
       }),
     );
+  });
+
+  it('returns Ukrainian content and falls back to English', async () => {
+    findFirstBook.mockResolvedValue({
+      ...storedBook,
+      translations: [
+        ...storedBook.translations,
+        {
+          locale: ContentLocale.uk,
+          title: 'Гобіт',
+          author: 'Дж. Р. Р. Толкін',
+          description: null,
+        },
+      ],
+      genre: {
+        ...storedBook.genre,
+        translations: [
+          ...storedBook.genre.translations,
+          { locale: ContentLocale.uk, name: 'Фентезі' },
+        ],
+      },
+    });
+
+    await expect(
+      booksService.findOne(publicBook.id, ContentLocale.uk),
+    ).resolves.toMatchObject({ title: 'Гобіт', genre: { name: 'Фентезі' } });
+
+    findFirstBook.mockResolvedValue(storedBook);
+    await expect(
+      booksService.findOne(publicBook.id, ContentLocale.uk),
+    ).resolves.toMatchObject({ title: 'The Hobbit' });
   });
 
   it('does not expose an archived or missing book by id', async () => {

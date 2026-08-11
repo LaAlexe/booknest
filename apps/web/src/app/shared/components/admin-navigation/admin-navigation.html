@@ -1,8 +1,11 @@
-<nav aria-label="Administration">
-  <a routerLink="/admin">Admin</a>
-  <a routerLink="/admin/books">Books</a>
-  <a routerLink="/admin/reservations">Reservations</a>
+<nav [attr.aria-label]="'admin.navigation.label' | translate">
+  <a routerLink="/admin">{{ 'admin.navigation.home' | translate }}</a>
+  <a routerLink="/admin/books">{{ 'admin.navigation.books' | translate }}</a>
+  <a routerLink="/admin/reservations"
+    >{{ 'admin.navigation.reservations' | translate }}</a
+  >
   <button type="button" [disabled]="isLoggingOut()" (click)="logout()">
-    {{ isLoggingOut() ? 'Signing out…' : 'Logout' }}
+    {{ (isLoggingOut() ? 'admin.navigation.loggingOut' :
+    'admin.navigation.logout') | translate }}
   </button>
 </nav>

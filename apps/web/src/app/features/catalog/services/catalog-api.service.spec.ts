@@ -40,8 +40,8 @@ describe('CatalogApiService', () => {
 
   it('requests a book and genres', () => {
     catalogApiService.getBook('book-1').subscribe();
-    httpTestingController.expectOne('/api/v1/books/book-1').flush({});
+    httpTestingController.expectOne('/api/v1/books/book-1?locale=en').flush({});
     catalogApiService.getGenres().subscribe();
-    httpTestingController.expectOne('/api/v1/genres').flush([]);
+    httpTestingController.expectOne('/api/v1/genres?locale=en').flush([]);
   });
 });

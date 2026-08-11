@@ -1,5 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { BookStatus, ReservationStatus } from '@prisma/client';
+import { BookStatus, ContentLocale, ReservationStatus } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import argon2 from 'argon2';
 import request from 'supertest';
@@ -42,7 +42,13 @@ describe('Admin reservations (database e2e)', () => {
     });
     adminUserId = adminUser.id;
     await prismaService.genre.create({
-      data: { id: genreId, name: 'Phase 4C', slug: 'phase-4c' },
+      data: {
+        id: genreId,
+        slug: 'phase-4c',
+        translations: {
+          create: { locale: ContentLocale.en, name: 'Phase 4C' },
+        },
+      },
     });
     sessionCookie = getSessionCookie(
       await request(apiApplication.getHttpServer())
@@ -211,10 +217,15 @@ describe('Admin reservations (database e2e)', () => {
         status: reservationStatus,
         book: {
           create: {
-            title: bookTitle,
-            author: 'BookNest Author',
             status: bookStatus,
             genreId,
+            translations: {
+              create: {
+                locale: ContentLocale.en,
+                title: bookTitle,
+                author: 'BookNest Author',
+              },
+            },
           },
         },
       },

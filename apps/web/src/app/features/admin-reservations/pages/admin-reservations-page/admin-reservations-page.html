@@ -2,17 +2,20 @@
   <app-admin-navigation />
   <div class="heading">
     <div>
-      <p class="eyebrow">Administration</p>
-      <h1>Reservations</h1>
+      <p class="eyebrow">{{ 'common.administration' | translate }}</p>
+      <h1>{{ 'admin.reservations.title' | translate }}</h1>
       @if (!isLoading()) {
-      <span class="muted">{{ totalReservations() }} total</span>
+      <span class="muted"
+        >{{ 'admin.reservations.total' | translate: { count: totalReservations()
+        } }}</span
+      >
       }
     </div>
   </div>
 
   <form class="filters" (ngSubmit)="applyFilters()">
     <label>
-      Search by book
+      {{ 'admin.reservations.search' | translate }}
       <input
         type="search"
         name="reservation-search"
@@ -22,38 +25,51 @@
       />
     </label>
     <label>
-      Status
+      {{ 'admin.reservations.status' | translate }}
       <select
         name="reservation-status"
         [ngModel]="selectedStatus()"
         (ngModelChange)="selectedStatus.set($event)"
       >
-        <option value="">All statuses</option>
-        <option value="RESERVED">Reserved</option>
-        <option value="BORROWED">Borrowed</option>
-        <option value="COMPLETED">Completed</option>
-        <option value="CANCELLED">Cancelled</option>
+        <option value="">
+          {{ 'admin.reservations.allStatuses' | translate }}
+        </option>
+        <option value="RESERVED">
+          {{ 'common.status.RESERVED' | translate }}
+        </option>
+        <option value="BORROWED">
+          {{ 'common.status.BORROWED' | translate }}
+        </option>
+        <option value="COMPLETED">
+          {{ 'common.status.COMPLETED' | translate }}
+        </option>
+        <option value="CANCELLED">
+          {{ 'common.status.CANCELLED' | translate }}
+        </option>
       </select>
     </label>
-    <button type="submit">Apply filters</button>
+    <button type="submit">
+      {{ 'admin.reservations.applyFilters' | translate }}
+    </button>
   </form>
 
   @if (isLoading()) {
-  <div class="state" role="status">Loading reservations…</div>
+  <div class="state" role="status">
+    {{ 'admin.reservations.loading' | translate }}
+  </div>
   } @else if (hasLoadError()) {
   <div class="state state--error" role="alert">
-    We couldn't load the reservations.
+    {{ 'admin.reservations.loadError' | translate }}
   </div>
   } @else if (reservations().length === 0) {
-  <div class="state">No reservations match these filters.</div>
+  <div class="state">{{ 'admin.reservations.empty' | translate }}</div>
   } @else { @if (hasConflict()) {
   <p class="message message--warning" role="alert">
-    This reservation changed before the action completed. Its current state has
-    been reloaded.
+    {{ 'admin.reservations.conflict' | translate }}
   </p>
   } @if (hasActionError()) {
   <p class="message message--error" role="alert">
-    We couldn't update the reservation. Please try again.
+    {{ 'admin.reservations.actionError' | translate }}
   </p>
   }
 
@@ -61,12 +77,12 @@
     <table>
       <thead>
         <tr>
-          <th>Book</th>
-          <th>Requester</th>
-          <th>Telegram</th>
-          <th>Status</th>
-          <th>Dates</th>
-          <th>Actions</th>
+          <th>{{ 'admin.reservations.book' | translate }}</th>
+          <th>{{ 'admin.reservations.requester' | translate }}</th>
+          <th>{{ 'admin.reservations.telegram' | translate }}</th>
+          <th>{{ 'admin.reservations.status' | translate }}</th>
+          <th>{{ 'admin.reservations.dates' | translate }}</th>
+          <th>{{ 'common.actions' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -89,21 +105,34 @@
             <span
               class="status-badge"
               [class]="'status-badge status-badge--' + reservation.status.toLowerCase()"
-              >{{ reservation.status }}</span
+              >{{ 'common.status.' + reservation.status | translate }}</span
             >
           </td>
           <td class="dates">
-            <span>Reserved: {{ reservation.reservedAt | date: 'medium' }}</span>
+            <span
+              >{{ 'admin.reservations.reservedAt' | translate: { date:
+              (reservation.reservedAt | localizedDate) } }}</span
+            >
             @if (reservation.borrowedAt) {
-            <span>Borrowed: {{ reservation.borrowedAt | date: 'medium' }}</span>
+            <span
+              >{{ 'admin.reservations.borrowedAt' | translate: { date:
+              (reservation.borrowedAt | localizedDate) } }}</span
+            >
             } @if (reservation.returnedAt) {
-            <span>Returned: {{ reservation.returnedAt | date: 'medium' }}</span>
+            <span
+              >{{ 'admin.reservations.returnedAt' | translate: { date:
+              (reservation.returnedAt | localizedDate) } }}</span
+            >
             } @if (reservation.cancelledAt) {
             <span
-              >Cancelled: {{ reservation.cancelledAt | date: 'medium' }}</span
+              >{{ 'admin.reservations.cancelledAt' | translate: { date:
+              (reservation.cancelledAt | localizedDate) } }}</span
             >
             } @if (reservation.cancellationReason) {
-            <span>Reason: {{ reservation.cancellationReason }}</span>
+            <span
+              >{{ 'admin.reservations.reason' | translate: { reason:
+              reservation.cancellationReason } }}</span
+            >
             }
           </td>
           <td class="actions">
@@ -113,7 +142,7 @@
               [disabled]="pendingReservationId() !== null"
               (click)="markBorrowed(reservation)"
             >
-              {{ actionLabel(reservation.id, 'borrow') }}
+              {{ actionLabel(reservation.id, 'borrow') | translate }}
             </button>
             <button
               class="secondary-action"
@@ -121,7 +150,7 @@
               [disabled]="pendingReservationId() !== null"
               (click)="cancelReservation(reservation)"
             >
-              {{ actionLabel(reservation.id, 'cancel') }}
+              {{ actionLabel(reservation.id, 'cancel') | translate }}
             </button>
             } @else if (reservation.status === 'BORROWED') {
             <button
@@ -129,10 +158,12 @@
               [disabled]="pendingReservationId() !== null"
               (click)="markReturned(reservation)"
             >
-              {{ actionLabel(reservation.id, 'return') }}
+              {{ actionLabel(reservation.id, 'return') | translate }}
             </button>
             } @else {
-            <span class="muted">No actions</span>
+            <span class="muted"
+              >{{ 'admin.reservations.noActions' | translate }}</span
+            >
             }
           </td>
         </tr>
@@ -141,21 +172,27 @@
     </table>
   </div>
 
-  <nav class="pagination" aria-label="Reservation pages">
+  <nav
+    class="pagination"
+    [attr.aria-label]="'admin.reservations.paginationLabel' | translate"
+  >
     <button
       type="button"
       [disabled]="currentPage() <= 1 || isLoading()"
       (click)="showPreviousPage()"
     >
-      Previous
+      {{ 'common.previous' | translate }}
     </button>
-    <span>Page {{ currentPage() }} of {{ totalPages() || 1 }}</span>
+    <span
+      >{{ 'common.pageOf' | translate: { page: currentPage(), totalPages:
+      totalPages() || 1 } }}</span
+    >
     <button
       type="button"
       [disabled]="currentPage() >= totalPages() || isLoading()"
       (click)="showNextPage()"
     >
-      Next
+      {{ 'common.next' | translate }}
     </button>
   </nav>
   }

@@ -7,6 +7,7 @@ import {
   Router,
 } from '@angular/router';
 import { of } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminAuthStore } from '../../../admin-auth/services/admin-auth.store';
 import { CatalogApiService } from '../../../catalog/services/catalog-api.service';
 import { AdminBook } from '../../models/admin-book.models';
@@ -22,6 +23,10 @@ const existingBook: AdminBook = {
   status: 'AVAILABLE',
   genreId: 'genre-1',
   genre: { id: 'genre-1', name: 'Fantasy', slug: 'fantasy' },
+  translations: {
+    en: { title: 'The Hobbit', author: 'J. R. R. Tolkien', description: null },
+    uk: { title: 'Гобіт', author: 'Дж. Р. Р. Толкін', description: null },
+  },
   isArchived: false,
   createdAt: '2026-01-01',
   updatedAt: '2026-01-01',
@@ -38,6 +43,7 @@ describe('AdminBookEditorPage', () => {
     await TestBed.configureTestingModule({
       imports: [AdminBookEditorPage],
       providers: [
+        provideTranslationTesting(),
         provideRouter([
           {
             path: 'admin/books',
@@ -86,7 +92,12 @@ describe('AdminBookEditorPage', () => {
     submitForm();
 
     expect(createBookSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'New Book', genreId: 'genre-1' }),
+      expect.objectContaining({
+        translations: expect.objectContaining({
+          en: expect.objectContaining({ title: 'New Book' }),
+        }),
+        genreId: 'genre-1',
+      }),
     );
     expect(navigateSpy).toHaveBeenCalledWith(['/admin/books']);
   });
@@ -94,12 +105,19 @@ describe('AdminBookEditorPage', () => {
   it('loads and updates an existing book', async () => {
     await configureEditor(existingBook.id);
     completeBookForm('Updated Book');
+    setInput('#book-title-uk', 'Оновлений Гобіт');
+    setInput('#book-author-uk', 'Дж. Р. Р. Толкін');
 
     submitForm();
 
     expect(updateBookSpy).toHaveBeenCalledWith(
       existingBook.id,
-      expect.objectContaining({ title: 'Updated Book' }),
+      expect.objectContaining({
+        translations: expect.objectContaining({
+          en: expect.objectContaining({ title: 'Updated Book' }),
+          uk: expect.objectContaining({ title: 'Оновлений Гобіт' }),
+        }),
+      }),
     );
   });
 

@@ -7,6 +7,8 @@ import {
   Router,
 } from '@angular/router';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
+import { LanguageService } from '../../../../shared/services/language.service';
 import { Book, PaginatedBooks } from '../../models/catalog.models';
 import { CatalogApiService } from '../../services/catalog-api.service';
 import { CatalogPage } from './catalog-page';
@@ -60,6 +62,7 @@ describe('CatalogPage', () => {
       imports: [CatalogPage],
       providers: [
         provideRouter([]),
+        provideTranslationTesting(),
         {
           provide: ActivatedRoute,
           useValue: {
@@ -74,7 +77,10 @@ describe('CatalogPage', () => {
     catalogFixture.detectChanges();
   }
 
-  afterEach(() => TestBed.resetTestingModule());
+  afterEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+  });
 
   it('renders catalog books and their availability', async () => {
     await configureCatalogTest();
@@ -83,6 +89,64 @@ describe('CatalogPage', () => {
     expect(catalogElement.textContent).toContain('Frank Herbert');
     expect(catalogElement.textContent).toContain('Science Fiction');
     expect(catalogElement.textContent).toContain('Available');
+  });
+
+  it('renders Ukrainian catalog and status labels at runtime', async () => {
+    await configureCatalogTest();
+    TestBed.inject(LanguageService).setLanguage('uk');
+    catalogFixture.detectChanges();
+
+    const catalogText = (catalogFixture.nativeElement as HTMLElement)
+      .textContent;
+    expect(catalogText).toContain('Каталог книг');
+    expect(catalogText).toContain('Доступна');
+  });
+
+  it('requests and renders localized catalog content when the language changes', async () => {
+    await configureCatalogTest();
+    const ukrainianBook: Book = {
+      ...catalogBook,
+      title: 'Дюна',
+      author: 'Френк Герберт',
+      genre: { ...catalogBook.genre, name: 'Наукова фантастика' },
+    };
+    catalogApiServiceMock.getBooks.mockReturnValueOnce(
+      of(createCatalogPage([ukrainianBook])),
+    );
+    catalogApiServiceMock.getGenres.mockReturnValueOnce(
+      of([ukrainianBook.genre]),
+    );
+
+    TestBed.inject(LanguageService).setLanguage('uk');
+    catalogFixture.detectChanges();
+
+    expect(catalogApiServiceMock.getBooks).toHaveBeenLastCalledWith(
+      expect.objectContaining({ locale: 'uk' }),
+    );
+    expect(catalogApiServiceMock.getGenres).toHaveBeenLastCalledWith('uk');
+    expect((catalogFixture.nativeElement as HTMLElement).textContent).toContain(
+      'Дюна',
+    );
+    expect((catalogFixture.nativeElement as HTMLElement).textContent).toContain(
+      'Наукова фантастика',
+    );
+  });
+
+  it('displays backend English fallback content for a Ukrainian request', async () => {
+    await configureCatalogTest();
+    catalogApiServiceMock.getBooks.mockReturnValueOnce(
+      of(createCatalogPage([catalogBook])),
+    );
+    catalogApiServiceMock.getGenres.mockReturnValueOnce(
+      of([catalogBook.genre]),
+    );
+
+    TestBed.inject(LanguageService).setLanguage('uk');
+    catalogFixture.detectChanges();
+
+    expect((catalogFixture.nativeElement as HTMLElement).textContent).toContain(
+      'Dune',
+    );
   });
 
   it('applies a title or author search', async () => {

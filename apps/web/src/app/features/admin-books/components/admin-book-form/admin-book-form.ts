@@ -6,14 +6,40 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Genre } from '../../../catalog/models/catalog.models';
-import { AdminBook, AdminBookInput } from '../../models/admin-book.models';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { trimmedRequiredValidator } from '../../../../shared/validators/trimmed-required.validator';
+import { Genre } from '../../../catalog/models/catalog.models';
+import {
+  AdminBook,
+  AdminBookInput,
+  AdminBookTranslation,
+} from '../../models/admin-book.models';
+
+const optionalTranslationValidator: ValidatorFn = (
+  translationGroup: AbstractControl,
+): ValidationErrors | null => {
+  const title = String(translationGroup.get('title')?.value ?? '').trim();
+  const author = String(translationGroup.get('author')?.value ?? '').trim();
+  const description = String(
+    translationGroup.get('description')?.value ?? '',
+  ).trim();
+  const hasAnyContent = Boolean(title || author || description);
+  return hasAnyContent && (!title || !author)
+    ? { incompleteTranslation: true }
+    : null;
+};
 
 @Component({
   selector: 'app-admin-book-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './admin-book-form.html',
   styleUrl: './admin-book-form.scss',
 })
@@ -27,9 +53,17 @@ export class AdminBookForm {
 
   protected readonly hasAttemptedSubmission = signal(false);
   protected readonly bookForm = this.formBuilder.nonNullable.group({
-    title: ['', [trimmedRequiredValidator, Validators.maxLength(255)]],
-    author: ['', [trimmedRequiredValidator, Validators.maxLength(255)]],
-    description: [''],
+    translations: this.formBuilder.nonNullable.group({
+      en: this.createRequiredTranslationGroup(),
+      uk: this.formBuilder.nonNullable.group(
+        {
+          title: ['', Validators.maxLength(255)],
+          author: ['', Validators.maxLength(255)],
+          description: [''],
+        },
+        { validators: optionalTranslationValidator },
+      ),
+    }),
     coverUrl: [
       '',
       [Validators.pattern(/^https?:\/\/\S+$/), Validators.maxLength(2048)],
@@ -41,13 +75,7 @@ export class AdminBookForm {
     effect(() => {
       const existingBook = this.book();
       if (existingBook) {
-        this.bookForm.setValue({
-          title: existingBook.title,
-          author: existingBook.author,
-          description: existingBook.description ?? '',
-          coverUrl: existingBook.coverUrl ?? '',
-          genreId: existingBook.genreId,
-        });
+        this.patchExistingBook(existingBook);
       }
     });
   }
@@ -59,24 +87,64 @@ export class AdminBookForm {
       return;
     }
     const formValue = this.bookForm.getRawValue();
+    const ukrainianTranslation = this.normalizeTranslation(
+      formValue.translations.uk,
+    );
     this.saveBook.emit({
-      title: formValue.title.trim(),
-      author: formValue.author.trim(),
-      description: formValue.description.trim() || null,
+      translations: {
+        en: this.normalizeTranslation(formValue.translations.en),
+        ...(ukrainianTranslation.title || ukrainianTranslation.author
+          ? { uk: ukrainianTranslation }
+          : {}),
+      },
       coverUrl: formValue.coverUrl.trim() || null,
       genreId: formValue.genreId,
     });
   }
 
-  protected shouldShowError(
-    controlName: keyof typeof this.bookForm.controls,
-  ): boolean {
-    const formControl = this.bookForm.controls[controlName];
+  protected shouldShowError(control: AbstractControl): boolean {
     return (
-      formControl.invalid &&
-      (formControl.dirty ||
-        formControl.touched ||
-        this.hasAttemptedSubmission())
+      control.invalid &&
+      (control.dirty || control.touched || this.hasAttemptedSubmission())
     );
+  }
+
+  private createRequiredTranslationGroup() {
+    return this.formBuilder.nonNullable.group({
+      title: ['', [trimmedRequiredValidator, Validators.maxLength(255)]],
+      author: ['', [trimmedRequiredValidator, Validators.maxLength(255)]],
+      description: [''],
+    });
+  }
+
+  private patchExistingBook(book: AdminBook): void {
+    this.bookForm.setValue({
+      translations: {
+        en: {
+          title: book.translations.en.title,
+          author: book.translations.en.author,
+          description: book.translations.en.description ?? '',
+        },
+        uk: {
+          title: book.translations.uk?.title ?? '',
+          author: book.translations.uk?.author ?? '',
+          description: book.translations.uk?.description ?? '',
+        },
+      },
+      coverUrl: book.coverUrl ?? '',
+      genreId: book.genreId,
+    });
+  }
+
+  private normalizeTranslation(translation: {
+    title: string;
+    author: string;
+    description: string;
+  }): AdminBookTranslation {
+    return {
+      title: translation.title.trim(),
+      author: translation.author.trim(),
+      description: translation.description.trim() || null,
+    };
   }
 }

@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Observable, of, Subject, throwError } from 'rxjs';
+import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminAuthStore } from '../../../admin-auth/services/admin-auth.store';
 import { AdminReservation } from '../../models/admin-reservation.models';
 import { AdminReservationsApiService } from '../../services/admin-reservations-api.service';
@@ -64,6 +65,7 @@ describe('AdminReservationsPage', () => {
       imports: [AdminReservationsPage],
       providers: [
         provideRouter([]),
+        provideTranslationTesting(),
         {
           provide: AdminAuthStore,
           useValue: { logout: vi.fn(() => of({ success: true })) },
@@ -167,7 +169,7 @@ describe('AdminReservationsPage', () => {
     pageFixture.detectChanges();
 
     expect(markReturnedSpy).toHaveBeenCalledWith(borrowedReservation.id);
-    expect(getPageElement().textContent).toContain('COMPLETED');
+    expect(getPageElement().textContent).toContain('Completed');
   });
 
   it('cancels reserved reservations with an optional reason', async () => {
@@ -181,7 +183,7 @@ describe('AdminReservationsPage', () => {
       reservedReservation.id,
       'No longer needed',
     );
-    expect(getPageElement().textContent).toContain('CANCELLED');
+    expect(getPageElement().textContent).toContain('Cancelled');
   });
 
   it('reloads the reservation and explains a 409 conflict', async () => {
@@ -205,7 +207,7 @@ describe('AdminReservationsPage', () => {
     expect(getPageElement().textContent).toContain(
       'current state has been reloaded',
     );
-    expect(getPageElement().textContent).toContain('CANCELLED');
+    expect(getPageElement().textContent).toContain('Cancelled');
   });
 
   it('shows a safe generic action error', async () => {

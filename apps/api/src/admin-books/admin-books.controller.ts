@@ -8,9 +8,11 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminAuthGuard } from '../admin-auth/admin-auth.guard';
+import { ContentLocaleQueryDto } from '../content-localization/content-locale-query.dto';
 import { AdminBook, AdminBooksService } from './admin-books.service';
 import { CreateAdminBookDto } from './dto/create-admin-book.dto';
 import { UpdateAdminBookDto } from './dto/update-admin-book.dto';
@@ -21,15 +23,16 @@ export class AdminBooksController {
   constructor(private readonly adminBooksService: AdminBooksService) {}
 
   @Get()
-  findAll(): Promise<AdminBook[]> {
-    return this.adminBooksService.findAll();
+  findAll(@Query() localeQuery: ContentLocaleQueryDto): Promise<AdminBook[]> {
+    return this.adminBooksService.findAll(localeQuery.locale);
   }
 
   @Get(':bookId')
   findOne(
     @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
+    @Query() localeQuery: ContentLocaleQueryDto,
   ): Promise<AdminBook> {
-    return this.adminBooksService.findOne(bookId);
+    return this.adminBooksService.findOne(bookId, localeQuery.locale);
   }
 
   @Post()
