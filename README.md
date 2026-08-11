@@ -77,6 +77,17 @@ npm run start --workspace @booknest/web
 
 Open `http://localhost:4200`. The Angular development server automatically proxies relative `/api` requests to the NestJS API on port `3000`; no frontend API URL configuration or browser CORS setup is required for local development.
 
+### Create the initial administrator
+
+Apply database migrations, then set `ADMIN_EMAIL` and a unique 12–128 character `ADMIN_PASSWORD` in the local `.env` file. Create the first administrator explicitly:
+
+```bash
+npm exec --workspace @booknest/api prisma migrate deploy
+npm run prisma:seed-admin --workspace @booknest/api
+```
+
+The command normalizes the email, stores an Argon2id password hash, and refuses to run when an administrator already exists. Never commit real administrator credentials to an environment file or source code.
+
 Quality commands:
 
 ```bash
