@@ -13,6 +13,13 @@ enum BookStatus {
   BORROWED
 }
 
+enum ReservationStatus {
+  RESERVED
+  BORROWED
+  COMPLETED
+  CANCELLED
+}
+
 model Genre {
   id        String   @id @default(uuid()) @db.Uuid
   name      String   @unique @db.VarChar(100)
@@ -25,20 +32,41 @@ model Genre {
 }
 
 model Book {
-  id          String     @id @default(uuid()) @db.Uuid
-  title       String     @db.VarChar(255)
-  author      String     @db.VarChar(255)
-  description String?    @db.Text
-  coverUrl    String?    @map("cover_url") @db.VarChar(2048)
-  status      BookStatus @default(AVAILABLE)
-  genreId     String     @map("genre_id") @db.Uuid
-  genre       Genre      @relation(fields: [genreId], references: [id], onDelete: Restrict)
-  isArchived  Boolean    @default(false) @map("is_archived")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id           String        @id @default(uuid()) @db.Uuid
+  title        String        @db.VarChar(255)
+  author       String        @db.VarChar(255)
+  description  String?       @db.Text
+  coverUrl     String?       @map("cover_url") @db.VarChar(2048)
+  status       BookStatus    @default(AVAILABLE)
+  genreId      String        @map("genre_id") @db.Uuid
+  genre        Genre         @relation(fields: [genreId], references: [id], onDelete: Restrict)
+  reservations Reservation[]
+  isArchived   Boolean       @default(false) @map("is_archived")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   @@index([isArchived, createdAt])
   @@index([genreId, isArchived])
   @@index([status])
   @@map("books")
+}
+
+model Reservation {
+  id                 String            @id @default(uuid()) @db.Uuid
+  bookId             String            @map("book_id") @db.Uuid
+  book               Book              @relation(fields: [bookId], references: [id], onDelete: Restrict)
+  requesterName      String            @map("requester_name") @db.VarChar(150)
+  telegramUsername   String            @map("telegram_username") @db.VarChar(33)
+  status             ReservationStatus @default(RESERVED)
+  reservedAt         DateTime          @default(now()) @map("reserved_at")
+  borrowedAt         DateTime?         @map("borrowed_at")
+  returnedAt         DateTime?         @map("returned_at")
+  cancelledAt        DateTime?         @map("cancelled_at")
+  cancellationReason String?           @map("cancellation_reason") @db.Text
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  @@index([bookId])
+  @@index([status])
+  @@map("reservations")
 }

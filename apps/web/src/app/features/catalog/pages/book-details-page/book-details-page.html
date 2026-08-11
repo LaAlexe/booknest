@@ -28,6 +28,12 @@
     } @else {
     <p class="description muted">No description is available for this book.</p>
     }
+    <app-reservation-form
+      [bookId]="selectedBook.id"
+      [bookStatus]="selectedBook.status"
+      (reservationSucceeded)="handleReservationSuccess($event)"
+      (availabilityConflict)="handleAvailabilityConflict()"
+    />
   </div>
 </article>
 }

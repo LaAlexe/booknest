@@ -5,6 +5,7 @@ import { BooksModule } from './books/books.module';
 import { DatabaseModule } from './database/database.module';
 import { GenresModule } from './genres/genres.module';
 import { HealthController } from './health/health.controller';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { HealthController } from './health/health.controller';
     DatabaseModule,
     BooksModule,
     GenresModule,
+    ReservationsModule,
   ],
   controllers: [HealthController],
 })

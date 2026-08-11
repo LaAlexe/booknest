@@ -1,0 +1,63 @@
+<section class="reservation" aria-labelledby="reservation-heading">
+  @if (successfulReservation(); as reservation) {
+  <div class="message message--success" role="status">
+    <h2 id="reservation-heading">Reservation confirmed</h2>
+    <p>
+      This book is reserved for {{ reservation.requesterName }}. Telegram:
+      <strong>{{ reservation.telegramUsername }}</strong>
+    </p>
+  </div>
+  } @else if (hasAvailabilityConflict()) {
+  <div class="message message--unavailable" role="alert">
+    <h2 id="reservation-heading">No longer available</h2>
+    <p>Another reader reserved this book before your request completed.</p>
+  </div>
+  } @else if (!isAvailable()) {
+  <div class="message message--unavailable">
+    <h2 id="reservation-heading">Currently unavailable</h2>
+    <p>This book is {{ bookStatus().toLowerCase() }} and cannot be reserved.</p>
+  </div>
+  } @else {
+  <h2 id="reservation-heading">Reserve this book</h2>
+  <form
+    [formGroup]="reservationForm"
+    (ngSubmit)="submitReservation()"
+    novalidate
+  >
+    <label for="requester-name">Your name</label>
+    <input
+      id="requester-name"
+      type="text"
+      formControlName="requesterName"
+      maxlength="150"
+      autocomplete="name"
+    />
+    @if (shouldShowValidationError(reservationForm.controls.requesterName)) {
+    <p class="field-error">Enter your name (maximum 150 characters).</p>
+    }
+
+    <label for="telegram-username">Telegram username</label>
+    <input
+      id="telegram-username"
+      type="text"
+      formControlName="telegramUsername"
+      autocomplete="off"
+      placeholder="@username"
+    />
+    @if (shouldShowValidationError(reservationForm.controls.telegramUsername)) {
+    <p class="field-error">
+      Enter 5–32 letters, numbers, or underscores, starting with a letter. The @
+      is optional.
+    </p>
+    } @if (hasSubmissionError()) {
+    <p class="message message--error" role="alert">
+      We couldn't complete your reservation. Please try again.
+    </p>
+    }
+
+    <button type="submit" [disabled]="isSubmitting()">
+      {{ isSubmitting() ? 'Reserving…' : 'Reserve' }}
+    </button>
+  </form>
+  }
+</section>

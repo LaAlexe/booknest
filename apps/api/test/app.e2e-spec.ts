@@ -1,5 +1,5 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { BookStatus } from '@prisma/client';
+import { BookStatus, ReservationStatus } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
@@ -13,6 +13,12 @@ describe('AppController (e2e)', () => {
   const countBooks = jest.fn();
   const findManyGenres = jest.fn();
   const runTransaction = jest.fn();
+  const claimAvailableBook = jest.fn();
+  const createReservation = jest.fn();
+  type ReservationTransactionOperation = (transactionClient: {
+    $queryRaw: typeof claimAvailableBook;
+    reservation: { create: typeof createReservation };
+  }) => Promise<unknown>;
   const publicBook = {
     id: '6c06bb7b-5294-4a22-b37c-d69214c08062',
     title: 'The Hobbit',
@@ -28,6 +34,29 @@ describe('AppController (e2e)', () => {
       slug: 'fantasy',
     },
   };
+  const publicReservation = {
+    id: 'eb3865f0-8ef4-41a4-bc57-7c762806438d',
+    bookId: publicBook.id,
+    requesterName: 'Svitlana',
+    telegramUsername: '@username',
+    status: ReservationStatus.RESERVED,
+    reservedAt: new Date('2026-08-10T12:00:00.000Z'),
+    borrowedAt: null,
+    returnedAt: null,
+    cancelledAt: null,
+    cancellationReason: null,
+    createdAt: new Date('2026-08-10T12:00:00.000Z'),
+    updatedAt: new Date('2026-08-10T12:00:00.000Z'),
+    book: { status: BookStatus.RESERVED },
+  };
+
+  const executeReservationTransaction = (
+    transactionOperation: ReservationTransactionOperation,
+  ): Promise<unknown> =>
+    transactionOperation({
+      $queryRaw: claimAvailableBook,
+      reservation: { create: createReservation },
+    });
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -41,6 +70,8 @@ describe('AppController (e2e)', () => {
           count: countBooks,
         },
         genre: { findMany: findManyGenres },
+        reservation: { create: createReservation },
+        $queryRaw: claimAvailableBook,
         $transaction: runTransaction,
       })
       .compile();
@@ -113,6 +144,52 @@ describe('AppController (e2e)', () => {
       .get('/api/v1/genres')
       .expect(200)
       .expect([publicBook.genre]);
+  });
+
+  it('/api/v1/books/:bookId/reservations (POST)', () => {
+    runTransaction.mockImplementation(executeReservationTransaction);
+    claimAvailableBook.mockResolvedValue([{ id: publicBook.id }]);
+    createReservation.mockResolvedValue(publicReservation);
+
+    return request(apiApplication.getHttpServer())
+      .post(`/api/v1/books/${publicBook.id}/reservations`)
+      .send({
+        requesterName: ' Svitlana ',
+        telegramUsername: 'USERNAME',
+      })
+      .expect(201)
+      .expect({
+        ...publicReservation,
+        reservedAt: publicReservation.reservedAt.toISOString(),
+        createdAt: publicReservation.createdAt.toISOString(),
+        updatedAt: publicReservation.updatedAt.toISOString(),
+      });
+  });
+
+  it('rejects invalid reservation input and book identifiers', async () => {
+    await request(apiApplication.getHttpServer())
+      .post(`/api/v1/books/${publicBook.id}/reservations`)
+      .send({ requesterName: ' ', telegramUsername: '@username' })
+      .expect(400);
+    await request(apiApplication.getHttpServer())
+      .post(`/api/v1/books/${publicBook.id}/reservations`)
+      .send({ requesterName: 'Svitlana', telegramUsername: '@bad-name' })
+      .expect(400);
+    await request(apiApplication.getHttpServer())
+      .post('/api/v1/books/not-a-uuid/reservations')
+      .send({ requesterName: 'Svitlana', telegramUsername: '@username' })
+      .expect(400);
+  });
+
+  it('returns BOOK_NOT_AVAILABLE when a book cannot be claimed', () => {
+    runTransaction.mockImplementation(executeReservationTransaction);
+    claimAvailableBook.mockResolvedValue([]);
+
+    return request(apiApplication.getHttpServer())
+      .post(`/api/v1/books/${publicBook.id}/reservations`)
+      .send({ requesterName: 'Svitlana', telegramUsername: '@username' })
+      .expect(409)
+      .expect(/BOOK_NOT_AVAILABLE/);
   });
 
   it('rejects invalid pagination and route identifiers', async () => {

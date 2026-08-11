@@ -1,0 +1,82 @@
+.reservation {
+  border-top: 1px solid #dfe4df;
+  margin-top: 2rem;
+  max-width: 32rem;
+  padding-top: 1.5rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin: 0 0 1rem;
+}
+
+form {
+  display: grid;
+  gap: 0.45rem;
+}
+
+label {
+  font-size: 0.9rem;
+  font-weight: 650;
+  margin-top: 0.6rem;
+}
+
+input {
+  border: 1px solid #aeb9b3;
+  border-radius: 0.4rem;
+  min-height: 2.65rem;
+  padding: 0.55rem 0.7rem;
+  width: 100%;
+}
+
+input.ng-invalid.ng-touched {
+  border-color: #a33a3a;
+}
+
+button {
+  background: #17634e;
+  border: 0;
+  border-radius: 0.4rem;
+  color: #fff;
+  cursor: pointer;
+  justify-self: start;
+  margin-top: 0.8rem;
+  min-height: 2.65rem;
+  padding: 0.55rem 1.2rem;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.field-error {
+  color: #8b2929;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.message {
+  border-radius: 0.55rem;
+  padding: 1rem;
+}
+
+.message p {
+  margin: 0;
+}
+
+.message--success {
+  background: #d9f2e6;
+  color: #145b43;
+}
+
+.message--unavailable {
+  background: #f0eee7;
+  color: #514d40;
+}
+
+.message--error {
+  background: #f8dddd;
+  color: #862b2b;
+  margin: 0.6rem 0 0;
+}
