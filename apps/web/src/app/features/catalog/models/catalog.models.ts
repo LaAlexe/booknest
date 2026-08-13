@@ -32,8 +32,20 @@ export interface PaginatedBooks {
 
 export interface BookQuery {
   locale?: 'en' | 'uk';
-  q?: string;
+  query?: string;
   genre?: string;
   page?: number;
   pageSize?: number;
+}
+
+
+export interface BookCatalog {
+  catalogPage: PaginatedBooks;
+  availableGenres: Genre[];
+}
+
+export interface CatalogFilters {
+  searchText: string;
+  genreSlug: string;
+  pageNumber: number;
 }

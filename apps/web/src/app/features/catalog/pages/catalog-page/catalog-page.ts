@@ -23,18 +23,12 @@ import {
   tap,
 } from 'rxjs';
 import { AvailabilityBadge } from '../../components/availability-badge/availability-badge';
-import { Genre, PaginatedBooks } from '../../models/catalog.models';
+import {BookCatalog, CatalogFilters, Genre, PaginatedBooks} from '../../models/catalog.models';
 import { CatalogApiService } from '../../services/catalog-api.service';
 import {
   LanguageService,
   SupportedLanguage,
 } from '../../../../shared/services/language.service';
-
-interface CatalogFilters {
-  searchText: string;
-  genreSlug: string;
-  pageNumber: number;
-}
 
 @Component({
   selector: 'app-catalog-page',
@@ -104,7 +98,7 @@ export class CatalogPage implements OnInit {
 
   private getCatalogFilters(queryParameters: ParamMap): CatalogFilters {
     return {
-      searchText: queryParameters.get('q') ?? '',
+      searchText: queryParameters.get('query') ?? '',
       genreSlug: queryParameters.get('genre') ?? '',
       pageNumber: Math.max(1, Number(queryParameters.get('page')) || 1),
     };
@@ -124,7 +118,7 @@ export class CatalogPage implements OnInit {
     void this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: {
-        q: searchText || null,
+        query: searchText || null,
         genre: this.genreControl.value || null,
         page: pageNumber > 1 ? pageNumber : null,
       },
@@ -134,15 +128,12 @@ export class CatalogPage implements OnInit {
   private loadCatalog(
     catalogFilters: CatalogFilters,
     locale: SupportedLanguage,
-  ): Observable<{
-    catalogPage: PaginatedBooks;
-    availableGenres: Genre[];
-  }> {
+  ): Observable<BookCatalog> {
     return defer(() => {
       this.isLoading.set(true);
       return forkJoin({
         catalogPage: this.catalogApiService.getBooks({
-          q: catalogFilters.searchText || undefined,
+          query: catalogFilters.searchText || undefined,
           genre: catalogFilters.genreSlug || undefined,
           page: catalogFilters.pageNumber,
           locale,
