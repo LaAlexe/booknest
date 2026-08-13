@@ -6,7 +6,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -32,7 +32,7 @@ import {
 
 @Component({
   selector: 'app-catalog-page',
-  imports: [AvailabilityBadge, ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [AvailabilityBadge, ReactiveFormsModule, RouterLink, TranslatePipe, FormsModule],
   templateUrl: './catalog-page.html',
   styleUrl: './catalog-page.scss',
 })
