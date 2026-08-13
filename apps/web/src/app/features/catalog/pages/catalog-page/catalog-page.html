@@ -40,67 +40,61 @@
   <div class="state state--error" role="alert">
     {{ 'catalog.loadError' | translate }}
   </div>
-  } @else if (catalogPage()) {
-    @if (catalogPage()!.data.length === 0) {
-      <div class="state">
-        <h2>{{ 'catalog.emptyTitle' | translate }}</h2>
-        <p>{{ 'catalog.emptyMessage' | translate }}</p>
-      </div>
-    } @else {
-      <div class="book-grid">
-        @for (book of catalogPage()!.data; track book.id) {
-          <article class="book-card">
-            @if (book.coverUrl) {
-              <img
-                [src]="book.coverUrl"
-                [alt]="'book.coverAlt' | translate: { title: book.title }"
-              />
-            } @else {
-              <div class="cover-placeholder" aria-hidden="true">BN</div>
-            }
-            <div class="book-card__body">
-              <app-availability-badge [status]="book.status" />
-              <h2><a [routerLink]="['/books', book.id]">{{ book.title }}</a></h2>
-              <p class="author">{{ book.author }}</p>
-              <p class="genre">{{ book.genre.name }}</p>
-            </div>
-          </article>
+  } @else if (catalogPage()) { @if (catalogPage()!.data.length === 0) {
+  <div class="state">
+    <h2>{{ 'catalog.emptyTitle' | translate }}</h2>
+    <p>{{ 'catalog.emptyMessage' | translate }}</p>
+  </div>
+  } @else {
+  <div class="book-grid">
+    @for (book of catalogPage()!.data; track book.id) {
+    <article class="book-card">
+      <div class="book-card__cover">
+        @if (book.coverUrl) {
+        <img
+          class="book-card__cover-image"
+          [src]="book.coverUrl"
+          [alt]="'book.coverAlt' | translate: { title: book.title }"
+        />
+        } @else {
+        <div class="book-card__cover-placeholder" aria-hidden="true">BN</div>
         }
       </div>
+      <div class="book-card__body">
+        <app-availability-badge [status]="book.status" />
+        <h2><a [routerLink]="['/books', book.id]">{{ book.title }}</a></h2>
+        <p class="author">{{ book.author }}</p>
+        <p class="genre">{{ book.genre.name }}</p>
+      </div>
+    </article>
+    }
+  </div>
 
-      @if (shouldDisplayPagination()) {
-        <nav
-          class="pagination"
-          [attr.aria-label]="'catalog.paginationLabel' | translate"
-        >
-          <button
-            type="button"
-            [disabled]="catalogPage()!.meta.page === 1"
-            (click)="goToPage(catalogPage()!.meta.page - 1)"
-          >
-            {{ 'common.previous' | translate }}
-          </button>
-          <span>
-            {{
-              'common.pageOf'
-                | translate:
-                  {
-                    page: catalogPage()!.meta.page,
-                    totalPages: catalogPage()!.meta.totalPages,
-                  }
-            }}
-          </span>
-          <button
-            type="button"
-            [disabled]="
+  @if (shouldDisplayPagination()) {
+  <nav
+    class="pagination"
+    [attr.aria-label]="'catalog.paginationLabel' | translate"
+  >
+    <button
+      type="button"
+      [disabled]="catalogPage()!.meta.page === 1"
+      (click)="goToPage(catalogPage()!.meta.page - 1)"
+    >
+      {{ 'common.previous' | translate }}
+    </button>
+    <span>
+      {{ 'common.pageOf' | translate: { page: catalogPage()!.meta.page,
+      totalPages: catalogPage()!.meta.totalPages, } }}
+    </span>
+    <button
+      type="button"
+      [disabled]="
               catalogPage()!.meta.page === catalogPage()!.meta.totalPages
             "
-            (click)="goToPage(catalogPage()!.meta.page + 1)"
-          >
-            {{ 'common.next' | translate }}
-          </button>
-        </nav>
-      }
-    }
-  }
+      (click)="goToPage(catalogPage()!.meta.page + 1)"
+    >
+      {{ 'common.next' | translate }}
+    </button>
+  </nav>
+  } } }
 </section>
