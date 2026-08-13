@@ -32,3 +32,15 @@ export interface AdminBookInput {
   coverUrl: string | null;
   genreId: string;
 }
+
+export interface ExternalBookSearchResult {
+  externalId: string;
+  title: string;
+  authors: string[];
+  description: string | null;
+  coverUrl: string | null;
+  isbn: string | null;
+  publishedDate: string | null;
+  language: string | null;
+  categories: string[];
+}

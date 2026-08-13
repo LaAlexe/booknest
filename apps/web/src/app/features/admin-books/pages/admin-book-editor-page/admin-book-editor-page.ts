@@ -1,6 +1,7 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { finalize, forkJoin, Observable, of } from 'rxjs';
 import { AdminNavigation } from '../../../../shared/components/admin-navigation/admin-navigation';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -8,12 +9,22 @@ import { Genre } from '../../../catalog/models/catalog.models';
 import { CatalogApiService } from '../../../catalog/services/catalog-api.service';
 import { LanguageService } from '../../../../shared/services/language.service';
 import { AdminBookForm } from '../../components/admin-book-form/admin-book-form';
-import { AdminBook, AdminBookInput } from '../../models/admin-book.models';
+import {
+  AdminBook,
+  AdminBookInput,
+  ExternalBookSearchResult,
+} from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
 
 @Component({
   selector: 'app-admin-book-editor-page',
-  imports: [AdminBookForm, AdminNavigation, RouterLink, TranslatePipe],
+  imports: [
+    AdminBookForm,
+    AdminNavigation,
+    ReactiveFormsModule,
+    RouterLink,
+    TranslatePipe,
+  ],
   templateUrl: './admin-book-editor-page.html',
   styleUrl: './admin-book-editor-page.scss',
 })
@@ -33,6 +44,17 @@ export class AdminBookEditorPage implements OnInit {
   protected readonly isSaving = signal(false);
   protected readonly hasSaveError = signal(false);
   protected readonly isEditing = this.bookId !== null;
+  protected readonly externalSearchControl = new FormControl('', {
+    nonNullable: true,
+  });
+  protected readonly externalSearchResults = signal<ExternalBookSearchResult[]>(
+    [],
+  );
+  protected readonly selectedExternalBook =
+    signal<ExternalBookSearchResult | null>(null);
+  protected readonly isExternalSearchLoading = signal(false);
+  protected readonly externalSearchError = signal<string | null>(null);
+  protected readonly hasExternalSearchCompleted = signal(false);
 
   ngOnInit(): void {
     const bookRequest: Observable<AdminBook | null> = this.bookId
@@ -78,5 +100,36 @@ export class AdminBookEditorPage implements OnInit {
         next: () => void this.router.navigate(['/admin/books']),
         error: () => this.hasSaveError.set(true),
       });
+  }
+
+  protected searchExternalBooks(): void {
+    const trimmedQuery = this.externalSearchControl.value.trim();
+    if (!trimmedQuery || this.isExternalSearchLoading()) {
+      return;
+    }
+    this.isExternalSearchLoading.set(true);
+    this.externalSearchError.set(null);
+    this.hasExternalSearchCompleted.set(false);
+    this.adminBooksApiService
+      .searchExternalBooks(trimmedQuery)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isExternalSearchLoading.set(false)),
+      )
+      .subscribe({
+        next: (externalBooks) => {
+          this.externalSearchResults.set(externalBooks);
+          this.hasExternalSearchCompleted.set(true);
+        },
+        error: () => {
+          this.externalSearchResults.set([]);
+          this.externalSearchError.set('admin.books.externalSearch.error');
+          this.hasExternalSearchCompleted.set(true);
+        },
+      });
+  }
+
+  protected selectExternalBook(externalBook: ExternalBookSearchResult): void {
+    this.selectedExternalBook.set(externalBook);
   }
 }

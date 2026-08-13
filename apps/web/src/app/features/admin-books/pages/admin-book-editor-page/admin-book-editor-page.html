@@ -13,13 +13,108 @@
   <div class="error" role="alert">
     {{ 'admin.books.formLoadError' | translate }}
   </div>
-  } @else { @if (hasSaveError()) {
+  } @else { @if (!isEditing) {
+  <section class="external-search" aria-labelledby="external-search-title">
+    <div class="external-search__heading">
+      <h2 id="external-search-title">
+        {{ 'admin.books.externalSearch.title' | translate }}
+      </h2>
+      <p>{{ 'admin.books.externalSearch.helper' | translate }}</p>
+    </div>
+
+    <div class="external-search__form">
+      <label class="visually-hidden" for="external-book-query">
+        {{ 'admin.books.externalSearch.label' | translate }}
+      </label>
+
+      <input
+        id="external-book-query"
+        type="search"
+        [formControl]="externalSearchControl"
+        [placeholder]="'admin.books.externalSearch.placeholder' | translate"
+      />
+
+      <button
+        type="button"
+        [disabled]="isExternalSearchLoading()"
+        (click)="searchExternalBooks()"
+      >
+        {{
+          (isExternalSearchLoading()
+            ? 'admin.books.externalSearch.searching'
+            : 'admin.books.externalSearch.search')
+            | translate
+        }}
+      </button>
+    </div>
+    @if (externalSearchError(); as errorTranslationKey) {
+    <p class="external-search__state error" role="alert">
+      {{ errorTranslationKey | translate }}
+    </p>
+    } @else if ( hasExternalSearchCompleted() && externalSearchResults().length
+    === 0 ) {
+    <div class="external-search__state">
+      <p>{{ 'admin.books.externalSearch.empty' | translate }}</p>
+      <p>{{ 'admin.books.externalSearch.manualFallback' | translate }}</p>
+    </div>
+    } @if (externalSearchResults().length > 0) {
+    <div class="external-results">
+      @for (externalBook of externalSearchResults(); track
+      externalBook.externalId) {
+      <article class="external-book-card">
+        @if (externalBook.coverUrl) {
+        <img
+          [src]="externalBook.coverUrl"
+          [alt]="
+                      'admin.books.externalSearch.coverAlt'
+                        | translate: { title: externalBook.title }
+                    "
+        />
+        } @else {
+        <div class="cover-placeholder" aria-hidden="true">BN</div>
+        }
+        <div class="external-book-card__content">
+          <h3>{{ externalBook.title }}</h3>
+          @if (externalBook.authors.length > 0) {
+          <p class="external-book-card__authors">
+            {{ externalBook.authors.join(', ') }}
+          </p>
+          }
+          <dl>
+            @if (externalBook.isbn) {
+            <div>
+              <dt>{{ 'admin.books.externalSearch.isbn' | translate }}</dt>
+              <dd>{{ externalBook.isbn }}</dd>
+            </div>
+            } @if (externalBook.publishedDate) {
+            <div>
+              <dt>{{ 'admin.books.externalSearch.published' | translate }}</dt>
+              <dd>{{ externalBook.publishedDate }}</dd>
+            </div>
+            } @if (externalBook.language) {
+            <div>
+              <dt>{{ 'admin.books.externalSearch.language' | translate }}</dt>
+              <dd>{{ externalBook.language }}</dd>
+            </div>
+            }
+          </dl>
+          <button type="button" (click)="selectExternalBook(externalBook)">
+            {{ 'admin.books.externalSearch.useBook' | translate }}
+          </button>
+        </div>
+      </article>
+      }
+    </div>
+    }
+  </section>
+  } @if (hasSaveError()) {
   <p class="error" role="alert">{{ 'admin.books.saveError' | translate }}</p>
   }
   <app-admin-book-form
     [book]="book()"
     [genres]="genres()"
     [isSaving]="isSaving()"
+    [externalBookPrefill]="selectedExternalBook()"
     (saveBook)="saveBook($event)"
   />
   }

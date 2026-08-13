@@ -21,6 +21,7 @@ import { ReservationsModule } from './reservations/reservations.module';
           .required(),
         PORT: Joi.number().port().default(3000),
         ADMIN_SESSION_TTL_HOURS: Joi.number().integer().min(1).default(12),
+        GOOGLE_BOOKS_API_KEY: Joi.string().allow('').optional(),
         NODE_ENV: Joi.string()
           .valid('development', 'test', 'production')
           .default('development'),

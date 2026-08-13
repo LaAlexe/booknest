@@ -36,4 +36,15 @@ describe('AdminBooksApiService', () => {
     expect(archiveRequest.request.withCredentials).toBe(true);
     archiveRequest.flush({});
   });
+
+  it('searches the authenticated external books endpoint with query parameters', () => {
+    adminBooksApiService.searchExternalBooks('The Hobbit').subscribe();
+
+    const searchRequest = httpTestingController.expectOne(
+      '/api/v1/admin/books/search-external?q=The%20Hobbit',
+    );
+    expect(searchRequest.request.method).toBe('GET');
+    expect(searchRequest.request.withCredentials).toBe(true);
+    searchRequest.flush([]);
+  });
 });

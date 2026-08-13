@@ -106,6 +106,22 @@
       "formLoading": "Завантаження форми книги…",
       "formLoadError": "Не вдалося завантажити форму книги.",
       "saveError": "Не вдалося зберегти книгу. Перевірте дані та спробуйте ще раз.",
+      "externalSearch": {
+        "title": "Знайти книгу",
+        "helper": "Шукайте в Google Books за назвою, автором або ISBN",
+        "label": "Пошук у Google Books",
+        "placeholder": "Назва, автор або ISBN",
+        "search": "Шукати",
+        "searching": "Пошук…",
+        "error": "Google Books зараз недоступний. Ви все одно можете додати книгу вручну.",
+        "empty": "У Google Books нічого не знайдено.",
+        "manualFallback": "Ви все одно можете додати книгу вручну.",
+        "coverAlt": "Обкладинка книги {{title}}",
+        "isbn": "ISBN:",
+        "published": "Опубліковано:",
+        "language": "Мова:",
+        "useBook": "Використати цю книгу"
+      },
       "form": {
         "title": "Назва",
         "englishSection": "English",

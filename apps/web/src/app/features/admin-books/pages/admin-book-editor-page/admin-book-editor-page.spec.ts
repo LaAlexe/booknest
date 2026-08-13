@@ -6,11 +6,14 @@ import {
   provideRouter,
   Router,
 } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { provideTranslationTesting } from '../../../../shared/testing/translation-testing.providers';
 import { AdminAuthStore } from '../../../admin-auth/services/admin-auth.store';
 import { CatalogApiService } from '../../../catalog/services/catalog-api.service';
-import { AdminBook } from '../../models/admin-book.models';
+import {
+  AdminBook,
+  ExternalBookSearchResult,
+} from '../../models/admin-book.models';
 import { AdminBooksApiService } from '../../services/admin-books-api.service';
 import { AdminBookEditorPage } from './admin-book-editor-page';
 
@@ -32,14 +35,28 @@ const existingBook: AdminBook = {
   updatedAt: '2026-01-01',
 };
 
+const externalBook: ExternalBookSearchResult = {
+  externalId: 'google-book-1',
+  title: 'Good Omens',
+  authors: ['Terry Pratchett', 'Neil Gaiman'],
+  description: null,
+  coverUrl: null,
+  isbn: '9780060853983',
+  publishedDate: '2006',
+  language: 'en',
+  categories: ['Fiction'],
+};
+
 describe('AdminBookEditorPage', () => {
   let editorFixture: ComponentFixture<AdminBookEditorPage>;
   let createBookSpy: ReturnType<typeof vi.fn>;
   let updateBookSpy: ReturnType<typeof vi.fn>;
+  let searchExternalBooksSpy: ReturnType<typeof vi.fn>;
 
   async function configureEditor(bookId: string | null): Promise<void> {
     createBookSpy = vi.fn(() => of(existingBook));
     updateBookSpy = vi.fn(() => of(existingBook));
+    searchExternalBooksSpy = vi.fn(() => of([externalBook]));
     await TestBed.configureTestingModule({
       imports: [AdminBookEditorPage],
       providers: [
@@ -68,6 +85,7 @@ describe('AdminBookEditorPage', () => {
             getBook: vi.fn(() => of(existingBook)),
             createBook: createBookSpy,
             updateBook: updateBookSpy,
+            searchExternalBooks: searchExternalBooksSpy,
           },
         },
         {
@@ -121,6 +139,56 @@ describe('AdminBookEditorPage', () => {
     );
   });
 
+  it('shows an empty state when Google Books returns no results', async () => {
+    await configureEditor(null);
+    searchExternalBooksSpy.mockReturnValue(of([]));
+    setInput('#external-book-query', 'Unknown Book');
+
+    submitExternalSearch();
+    editorFixture.detectChanges();
+
+    expect(searchExternalBooksSpy).toHaveBeenCalledWith('Unknown Book');
+    expect(getEditorText()).toContain('No books found in Google Books.');
+    expect(getEditorText()).toContain('You can still add the book manually.');
+  });
+
+  it('shows a recoverable error when Google Books is unavailable', async () => {
+    await configureEditor(null);
+    searchExternalBooksSpy.mockReturnValue(
+      throwError(() => new Error('Unavailable')),
+    );
+    setInput('#external-book-query', 'The Hobbit');
+
+    submitExternalSearch();
+    editorFixture.detectChanges();
+
+    expect(getEditorText()).toContain('Google Books is unavailable right now.');
+    expect(getEditorText()).toContain('Save book');
+  });
+
+  it('selects a Google result without creating a book', async () => {
+    await configureEditor(null);
+    setInput('#external-book-query', 'Good Omens');
+    submitExternalSearch();
+    editorFixture.detectChanges();
+
+    const useBookButton = Array.from(
+      (editorFixture.nativeElement as HTMLElement).querySelectorAll('button'),
+    ).find((buttonElement) =>
+      buttonElement.textContent?.includes('Use this book'),
+    );
+    expect(useBookButton).toBeDefined();
+    useBookButton?.click();
+    editorFixture.detectChanges();
+
+    const titleInput = (
+      editorFixture.nativeElement as HTMLElement
+    ).querySelector('#book-title');
+    expect(titleInput).toBeInstanceOf(HTMLInputElement);
+    expect((titleInput as HTMLInputElement).value).toBe('Good Omens');
+    expect(createBookSpy).not.toHaveBeenCalled();
+  });
+
   function completeBookForm(title: string): void {
     setInput('#book-title', title);
     setInput('#book-author', existingBook.author);
@@ -144,7 +212,17 @@ describe('AdminBookEditorPage', () => {
 
   function submitForm(): void {
     editorFixture.debugElement
-      .query(By.css('form'))
+      .query(By.css('app-admin-book-form form'))
       .triggerEventHandler('ngSubmit');
+  }
+
+  function submitExternalSearch(): void {
+    editorFixture.debugElement
+      .query(By.css('.external-search__form'))
+      .triggerEventHandler('ngSubmit');
+  }
+
+  function getEditorText(): string {
+    return (editorFixture.nativeElement as HTMLElement).textContent ?? '';
   }
 });

@@ -106,6 +106,22 @@
       "formLoading": "Loading book form…",
       "formLoadError": "We couldn't load the book form.",
       "saveError": "We couldn't save the book. Check the details and try again.",
+      "externalSearch": {
+        "title": "Find book",
+        "helper": "Search Google Books by title, author or ISBN",
+        "label": "Search Google Books",
+        "placeholder": "Search by title, author or ISBN",
+        "search": "Search",
+        "searching": "Searching…",
+        "error": "Google Books is unavailable right now. You can still add the book manually.",
+        "empty": "No books found in Google Books.",
+        "manualFallback": "You can still add the book manually.",
+        "coverAlt": "Cover of {{title}}",
+        "isbn": "ISBN:",
+        "published": "Published:",
+        "language": "Language:",
+        "useBook": "Use this book"
+      },
       "form": {
         "title": "Title",
         "englishSection": "English",

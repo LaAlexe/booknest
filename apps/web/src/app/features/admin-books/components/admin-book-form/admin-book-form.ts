@@ -22,6 +22,7 @@ import {
   AdminBook,
   AdminBookInput,
   AdminBookTranslation,
+  ExternalBookSearchResult,
 } from '../../models/admin-book.models';
 
 const optionalTranslationValidator: ValidatorFn = (
@@ -50,6 +51,7 @@ export class AdminBookForm {
   readonly book = input<AdminBook | null>(null);
   readonly genres = input.required<Genre[]>();
   readonly isSaving = input(false);
+  readonly externalBookPrefill = input<ExternalBookSearchResult | null>(null);
   readonly saveBook = output<AdminBookInput>();
 
   protected readonly hasAttemptedSubmission = signal(false);
@@ -77,6 +79,11 @@ export class AdminBookForm {
       const existingBook = this.book();
       if (existingBook) {
         this.patchExistingBook(existingBook);
+        return;
+      }
+      const externalBookPrefill = this.externalBookPrefill();
+      if (externalBookPrefill) {
+        this.populateFormFromExternalBook(externalBookPrefill);
       }
     });
   }
@@ -134,6 +141,21 @@ export class AdminBookForm {
       },
       coverUrl: book.coverUrl ?? '',
       genreId: book.genreId,
+    });
+  }
+
+  private populateFormFromExternalBook(
+    externalBook: ExternalBookSearchResult,
+  ): void {
+    this.bookForm.patchValue({
+      translations: {
+        en: {
+          title: externalBook.title,
+          author: externalBook.authors.join(', '),
+          description: externalBook.description ?? '',
+        },
+      },
+      coverUrl: externalBook.coverUrl ?? '',
     });
   }
 

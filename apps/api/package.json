@@ -25,6 +25,7 @@
     "prisma:seed-admin": "ts-node src/admin-auth/seed-admin.ts"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
@@ -32,6 +33,7 @@
     "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.19.0",
     "argon2": "^0.45.1",
+    "axios": "^1.19.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "joi": "^17.13.3",

@@ -1,7 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AdminBook, AdminBookInput } from '../models/admin-book.models';
+import {
+  AdminBook,
+  AdminBookInput,
+  ExternalBookSearchResult,
+} from '../models/admin-book.models';
 import { SupportedLanguage } from '../../../shared/services/language.service';
 
 @Injectable({ providedIn: 'root' })
@@ -45,6 +49,17 @@ export class AdminBooksApiService {
       `${this.baseUrl}/${bookId}/archive`,
       {},
       { withCredentials: true },
+    );
+  }
+
+  searchExternalBooks(query: string): Observable<ExternalBookSearchResult[]> {
+    const searchParameters = new HttpParams().set('q', query);
+    return this.httpClient.get<ExternalBookSearchResult[]>(
+      `${this.baseUrl}/search-external`,
+      {
+        params: searchParameters,
+        withCredentials: true,
+      },
     );
   }
 }
