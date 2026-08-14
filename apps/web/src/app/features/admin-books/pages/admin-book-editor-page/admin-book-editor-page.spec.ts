@@ -218,8 +218,8 @@ describe('AdminBookEditorPage', () => {
 
   function submitExternalSearch(): void {
     editorFixture.debugElement
-      .query(By.css('.external-search__form'))
-      .triggerEventHandler('ngSubmit');
+      .query(By.css('.external-search__form button'))
+      .triggerEventHandler('click');
   }
 
   function getEditorText(): string {
