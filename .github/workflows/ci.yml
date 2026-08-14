@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  quality:
+    name: Lint, test, and build
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql://booknest:booknest@localhost:5432/booknest_test?schema=public
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: booknest_test
+          POSTGRES_USER: booknest
+          POSTGRES_PASSWORD: booknest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U booknest -d booknest_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Prisma schema
+        run: npm run prisma:validate --workspace @booknest/api
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate --workspace @booknest/api
+
+      - name: Apply Prisma migrations
+        run: npm exec --workspace @booknest/api -- prisma migrate deploy
+
+      - name: Lint Angular frontend
+        run: npm run lint --workspace @booknest/web
+
+      - name: Test Angular frontend
+        run: npm run test --workspace @booknest/web -- --watch=false
+
+      - name: Build Angular frontend
+        run: npm run build --workspace @booknest/web
+
+      - name: Lint NestJS backend
+        run: npm run lint --workspace @booknest/api
+
+      - name: Test NestJS backend
+        run: npm run test --workspace @booknest/api
+
+      - name: Test NestJS backend end to end
+        run: npm run test:e2e --workspace @booknest/api
+
+      - name: Build NestJS backend
+        run: npm run build --workspace @booknest/api

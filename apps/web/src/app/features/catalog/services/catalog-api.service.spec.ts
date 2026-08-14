@@ -22,12 +22,12 @@ describe('CatalogApiService', () => {
 
   it('requests books with catalog query parameters', () => {
     catalogApiService
-      .getBooks({ q: 'dune', genre: 'science-fiction', page: 2, pageSize: 10 })
+      .getBooks({ query: 'dune', genre: 'science-fiction', page: 2, pageSize: 10 })
       .subscribe();
     const booksRequest = httpTestingController.expectOne(
       (httpRequest) =>
         httpRequest.url === '/api/v1/books' &&
-        httpRequest.params.get('q') === 'dune',
+        httpRequest.params.get('query') === 'dune',
     );
     expect(booksRequest.request.params.get('genre')).toBe('science-fiction');
     expect(booksRequest.request.params.get('page')).toBe('2');
