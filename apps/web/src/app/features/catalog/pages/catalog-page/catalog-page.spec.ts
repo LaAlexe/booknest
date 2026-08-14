@@ -166,7 +166,7 @@ describe('CatalogPage', () => {
     expect(navigateSpy).toHaveBeenCalledWith(
       [],
       expect.objectContaining({
-        queryParams: expect.objectContaining({ q: 'Herbert' }),
+        queryParams: expect.objectContaining({ query: 'Herbert' }),
       }),
     );
   });
