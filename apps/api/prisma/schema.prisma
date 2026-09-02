@@ -53,6 +53,7 @@ model GenreTranslation {
 model Book {
   id           String            @id @default(uuid()) @db.Uuid
   coverUrl     String?           @map("cover_url") @db.VarChar(2048)
+  coverKey     String?           @map("cover_key") @db.VarChar(1024)
   status       BookStatus        @default(AVAILABLE)
   genreId      String            @map("genre_id") @db.Uuid
   genre        Genre             @relation(fields: [genreId], references: [id], onDelete: Restrict)

@@ -10,6 +10,12 @@ import {
   Post,
   Query,
   UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { AdminAuthGuard } from '../admin-auth/admin-auth.guard';
@@ -20,6 +26,7 @@ import { AdminBook, AdminBooksService } from './admin-books.service';
 import { CreateAdminBookDto } from './dto/create-admin-book.dto';
 import { SearchExternalBooksQueryDto } from './dto/search-external-books-query.dto';
 import { UpdateAdminBookDto } from './dto/update-admin-book.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('admin/books')
 @UseGuards(AdminAuthGuard)
@@ -61,6 +68,29 @@ export class AdminBooksController {
   ): Promise<AdminBook> {
     return this.adminBooksService.update(bookId, updateBook);
   }
+
+  @Post(':bookId/cover')
+@UseInterceptors(FileInterceptor('file'))
+uploadCover(
+  @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
+  @UploadedFile(
+    new ParseFilePipe({
+      validators: [
+        new MaxFileSizeValidator({
+          maxSize: 5 * 1024 * 1024,
+        }),
+        new FileTypeValidator({
+          fileType: /^image\/(jpeg|png|webp)$/,
+        }),
+      ],
+      fileIsRequired: true,
+      exceptionFactory: (error) => new BadRequestException(error),
+    }),
+  )
+  file: Express.Multer.File,
+): Promise<AdminBook> {
+  return this.adminBooksService.uploadCover(bookId, file);
+}
 
   @Post(':bookId/archive')
   @HttpCode(HttpStatus.OK)
