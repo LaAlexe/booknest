@@ -10,6 +10,7 @@ import { PrismaService } from '../database/prisma.service';
 import { CreateAdminBookDto } from './dto/create-admin-book.dto';
 import { UpdateAdminBookDto } from './dto/update-admin-book.dto';
 import { BookTranslationDto } from './dto/book-translations.dto';
+import { AdminBook, AdminBookTranslation } from './models/admin-book.model';
 import { S3Service } from '../s3/s3.service';
 import { randomUUID } from 'crypto';
 
@@ -40,36 +41,12 @@ type StoredAdminBook = Prisma.BookGetPayload<{
   select: typeof adminBookSelect;
 }>;
 
-export interface AdminBookTranslation {
-  title: string;
-  author: string;
-  description: string | null;
-}
-
-export interface AdminBook {
-  id: string;
-  title: string;
-  author: string;
-  description: string | null;
-  coverUrl: string | null;
-  status: BookStatus;
-  genreId: string;
-  genre: { id: string; name: string; slug: string };
-  translations: {
-    en: AdminBookTranslation;
-    uk?: AdminBookTranslation;
-  };
-  isArchived: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 @Injectable()
 export class AdminBooksService {
   constructor(
-  private readonly prismaService: PrismaService,
-  private readonly s3Service: S3Service,
-) {}
+    private readonly prismaService: PrismaService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   async findAll(
     locale: ContentLocale = ContentLocale.en,
@@ -78,8 +55,7 @@ export class AdminBooksService {
       select: adminBookSelect,
       orderBy: [{ isArchived: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
     });
-    return Promise.all(books.map((book) => this.toAdminBook(book, locale)),
-);
+    return Promise.all(books.map((book) => this.toAdminBook(book, locale)));
   }
 
   async findOne(
@@ -140,33 +116,29 @@ export class AdminBooksService {
     });
     return this.toAdminBook(book);
   }
-  
+
   async uploadCover(
-  bookId: string,
-  file: Express.Multer.File,
-): Promise<AdminBook> {
-  await this.findOne(bookId);
+    bookId: string,
+    file: Express.Multer.File,
+  ): Promise<AdminBook> {
+    await this.findOne(bookId);
 
-  const extension = this.getCoverExtension(file.mimetype);
-  const coverKey = `books/${bookId}/${randomUUID()}.${extension}`;
+    const extension = this.getCoverExtension(file.mimetype);
+    const coverKey = `books/${bookId}/${randomUUID()}.${extension}`;
 
-  await this.s3Service.uploadBookCover(
-    coverKey,
-    file.buffer,
-    file.mimetype,
-  );
+    await this.s3Service.uploadBookCover(coverKey, file.buffer, file.mimetype);
 
-  const book = await this.prismaService.book.update({
-    where: { id: bookId },
-    data: {
-      coverKey,
-      coverUrl: null,
-    },
-    select: adminBookSelect,
-  });
+    const book = await this.prismaService.book.update({
+      where: { id: bookId },
+      data: {
+        coverKey,
+        coverUrl: null,
+      },
+      select: adminBookSelect,
+    });
 
-  return this.toAdminBook(book);
-}
+    return this.toAdminBook(book);
+  }
 
   async archive(bookId: string): Promise<AdminBook> {
     const archiveResult = await this.prismaService.book.updateMany({
@@ -246,9 +218,9 @@ export class AdminBooksService {
   }
 
   private async toAdminBook(
-  book: StoredAdminBook,
-  locale: ContentLocale = ContentLocale.en,
-): Promise<AdminBook> {
+    book: StoredAdminBook,
+    locale: ContentLocale = ContentLocale.en,
+  ): Promise<AdminBook> {
     const englishTranslation = selectContentTranslation(
       book.translations,
       ContentLocale.en,
@@ -266,8 +238,8 @@ export class AdminBooksService {
     );
 
     const coverUrl = book.coverKey
-  ? await this.s3Service.getBookCoverUrl(book.coverKey)
-  : book.coverUrl;
+      ? await this.s3Service.getBookCoverUrl(book.coverKey)
+      : book.coverUrl;
     return {
       id: book.id,
       title: effectiveTranslation.title,
@@ -315,15 +287,15 @@ export class AdminBooksService {
   }
 
   private getCoverExtension(contentType: string): string {
-  switch (contentType) {
-    case 'image/jpeg':
-      return 'jpg';
-    case 'image/png':
-      return 'png';
-    case 'image/webp':
-      return 'webp';
-    default:
-      throw new BadRequestException('Unsupported cover image type');
+    switch (contentType) {
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/png':
+        return 'png';
+      case 'image/webp':
+        return 'webp';
+      default:
+        throw new BadRequestException('Unsupported cover image type');
+    }
   }
-}
 }
