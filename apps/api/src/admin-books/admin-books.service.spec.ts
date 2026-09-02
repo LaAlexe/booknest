@@ -2,12 +2,14 @@ import { ConflictException } from '@nestjs/common';
 import { BookStatus, ContentLocale } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../database/prisma.service';
+import { S3Service } from '../s3/s3.service';
 import { AdminBooksService } from './admin-books.service';
 
 describe('AdminBooksService', () => {
   const genreId = '87de0284-9b75-4395-9bd8-1217e374ef78';
   const availableBook = {
     id: '6c06bb7b-5294-4a22-b37c-d69214c08062',
+    coverKey: null,
     coverUrl: null,
     status: BookStatus.AVAILABLE,
     genreId,
@@ -56,6 +58,11 @@ describe('AdminBooksService', () => {
     (...methodArguments: unknown[]): Promise<unknown> =>
       Promise.resolve(methodArguments),
   );
+  const uploadBookCover = jest.fn(() => Promise.resolve());
+  const deleteBookCover = jest.fn(() => Promise.resolve());
+  const getBookCoverUrl = jest.fn((coverKey: string) =>
+    Promise.resolve(`https://book-covers.example/${coverKey}`),
+  );
   let adminBooksService: AdminBooksService;
 
   beforeEach(async () => {
@@ -73,6 +80,14 @@ describe('AdminBooksService', () => {
               updateMany: updateBooks,
             },
             genre: { count: countGenres },
+          },
+        },
+        {
+          provide: S3Service,
+          useValue: {
+            uploadBookCover,
+            deleteBookCover,
+            getBookCoverUrl,
           },
         },
       ],
