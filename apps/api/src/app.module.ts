@@ -9,7 +9,7 @@ import { DatabaseModule } from './database/database.module';
 import { GenresModule } from './genres/genres.module';
 import { HealthController } from './health/health.controller';
 import { ReservationsModule } from './reservations/reservations.module';
-
+import { S3Module } from './s3/s3.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,6 +25,8 @@ import { ReservationsModule } from './reservations/reservations.module';
         NODE_ENV: Joi.string()
           .valid('development', 'test', 'production')
           .default('development'),
+        AWS_REGION: Joi.string().required(),
+        S3_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     DatabaseModule,
@@ -34,6 +36,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     AdminAuthModule,
     AdminBooksModule,
     AdminReservationsModule,
+    S3Module,
   ],
   controllers: [HealthController],
 })

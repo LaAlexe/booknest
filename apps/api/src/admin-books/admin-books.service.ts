@@ -10,10 +10,14 @@ import { PrismaService } from '../database/prisma.service';
 import { CreateAdminBookDto } from './dto/create-admin-book.dto';
 import { UpdateAdminBookDto } from './dto/update-admin-book.dto';
 import { BookTranslationDto } from './dto/book-translations.dto';
+import { AdminBook, AdminBookTranslation } from './models/admin-book.model';
+import { S3Service } from '../s3/s3.service';
+import { randomUUID } from 'crypto';
 
 const adminBookSelect = Prisma.validator<Prisma.BookSelect>()({
   id: true,
   coverUrl: true,
+  coverKey: true,
   status: true,
   genreId: true,
   isArchived: true,
@@ -37,33 +41,12 @@ type StoredAdminBook = Prisma.BookGetPayload<{
   select: typeof adminBookSelect;
 }>;
 
-export interface AdminBookTranslation {
-  title: string;
-  author: string;
-  description: string | null;
-}
-
-export interface AdminBook {
-  id: string;
-  title: string;
-  author: string;
-  description: string | null;
-  coverUrl: string | null;
-  status: BookStatus;
-  genreId: string;
-  genre: { id: string; name: string; slug: string };
-  translations: {
-    en: AdminBookTranslation;
-    uk?: AdminBookTranslation;
-  };
-  isArchived: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 @Injectable()
 export class AdminBooksService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly s3Service: S3Service,
+  ) {}
 
   async findAll(
     locale: ContentLocale = ContentLocale.en,
@@ -72,7 +55,7 @@ export class AdminBooksService {
       select: adminBookSelect,
       orderBy: [{ isArchived: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
     });
-    return books.map((book) => this.toAdminBook(book, locale));
+    return Promise.all(books.map((book) => this.toAdminBook(book, locale)));
   }
 
   async findOne(
@@ -111,14 +94,30 @@ export class AdminBooksService {
     if (Object.keys(updateBook).length === 0) {
       throw new BadRequestException('At least one book field is required');
     }
+
     if (updateBook.genreId) {
       await this.ensureGenreExists(updateBook.genreId);
     }
-    await this.findOne(bookId);
+
+    const currentBook = await this.prismaService.book.findUnique({
+      where: { id: bookId },
+      select: {
+        id: true,
+        coverKey: true,
+      },
+    });
+
+    if (!currentBook) {
+      throw new NotFoundException('Book not found');
+    }
+
+    const isCoverUrlUpdated = updateBook.coverUrl !== undefined;
+
     const book = await this.prismaService.book.update({
       where: { id: bookId },
       data: {
         coverUrl: updateBook.coverUrl,
+        coverKey: isCoverUrlUpdated ? null : undefined,
         genreId: updateBook.genreId,
         translations: updateBook.translations
           ? {
@@ -131,6 +130,52 @@ export class AdminBooksService {
       },
       select: adminBookSelect,
     });
+
+    if (isCoverUrlUpdated && currentBook.coverKey) {
+      await this.s3Service.deleteBookCover(currentBook.coverKey);
+    }
+
+    return this.toAdminBook(book);
+  }
+
+  async uploadCover(
+    bookId: string,
+    file: Express.Multer.File,
+  ): Promise<AdminBook> {
+    const currentBook = await this.prismaService.book.findUnique({
+      where: { id: bookId },
+      select: {
+        id: true,
+        coverKey: true,
+      },
+    });
+
+    if (!currentBook) {
+      throw new NotFoundException('Book not found');
+    }
+
+    const extension = this.getCoverExtension(file.mimetype);
+    const newCoverKey = `books/${bookId}/${randomUUID()}.${extension}`;
+
+    await this.s3Service.uploadBookCover(
+      newCoverKey,
+      file.buffer,
+      file.mimetype,
+    );
+
+    const book = await this.prismaService.book.update({
+      where: { id: bookId },
+      data: {
+        coverKey: newCoverKey,
+        coverUrl: null,
+      },
+      select: adminBookSelect,
+    });
+
+    if (currentBook.coverKey) {
+      await this.s3Service.deleteBookCover(currentBook.coverKey);
+    }
+
     return this.toAdminBook(book);
   }
 
@@ -211,10 +256,10 @@ export class AdminBooksService {
     };
   }
 
-  private toAdminBook(
+  private async toAdminBook(
     book: StoredAdminBook,
     locale: ContentLocale = ContentLocale.en,
-  ): AdminBook {
+  ): Promise<AdminBook> {
     const englishTranslation = selectContentTranslation(
       book.translations,
       ContentLocale.en,
@@ -230,12 +275,16 @@ export class AdminBooksService {
       book.genre.translations,
       locale,
     );
+
+    const coverUrl = book.coverKey
+      ? await this.s3Service.getBookCoverUrl(book.coverKey)
+      : book.coverUrl;
     return {
       id: book.id,
       title: effectiveTranslation.title,
       author: effectiveTranslation.author,
       description: effectiveTranslation.description,
-      coverUrl: book.coverUrl,
+      coverUrl: coverUrl,
       status: book.status,
       genreId: book.genreId,
       genre: {
@@ -273,6 +322,19 @@ export class AdminBooksService {
     });
     if (genreExists === 0) {
       throw new BadRequestException('Genre does not exist');
+    }
+  }
+
+  private getCoverExtension(contentType: string): string {
+    switch (contentType) {
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/png':
+        return 'png';
+      case 'image/webp':
+        return 'webp';
+      default:
+        throw new BadRequestException('Unsupported cover image type');
     }
   }
 }
