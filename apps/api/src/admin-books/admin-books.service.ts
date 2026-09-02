@@ -121,21 +121,39 @@ export class AdminBooksService {
     bookId: string,
     file: Express.Multer.File,
   ): Promise<AdminBook> {
-    await this.findOne(bookId);
+    const currentBook = await this.prismaService.book.findUnique({
+      where: { id: bookId },
+      select: {
+        id: true,
+        coverKey: true,
+      },
+    });
+
+    if (!currentBook) {
+      throw new NotFoundException('Book not found');
+    }
 
     const extension = this.getCoverExtension(file.mimetype);
-    const coverKey = `books/${bookId}/${randomUUID()}.${extension}`;
+    const newCoverKey = `books/${bookId}/${randomUUID()}.${extension}`;
 
-    await this.s3Service.uploadBookCover(coverKey, file.buffer, file.mimetype);
+    await this.s3Service.uploadBookCover(
+      newCoverKey,
+      file.buffer,
+      file.mimetype,
+    );
 
     const book = await this.prismaService.book.update({
       where: { id: bookId },
       data: {
-        coverKey,
+        coverKey: newCoverKey,
         coverUrl: null,
       },
       select: adminBookSelect,
     });
+
+    if (currentBook.coverKey) {
+      await this.s3Service.deleteBookCover(currentBook.coverKey);
+    }
 
     return this.toAdminBook(book);
   }
