@@ -94,26 +94,47 @@ export class AdminBooksService {
     if (Object.keys(updateBook).length === 0) {
       throw new BadRequestException('At least one book field is required');
     }
+
     if (updateBook.genreId) {
       await this.ensureGenreExists(updateBook.genreId);
     }
-    await this.findOne(bookId);
+
+    const currentBook = await this.prismaService.book.findUnique({
+      where: { id: bookId },
+      select: {
+        id: true,
+        coverKey: true,
+      },
+    });
+
+    if (!currentBook) {
+      throw new NotFoundException('Book not found');
+    }
+
+    const isCoverUrlUpdated = updateBook.coverUrl !== undefined;
+
     const book = await this.prismaService.book.update({
       where: { id: bookId },
       data: {
         coverUrl: updateBook.coverUrl,
+        coverKey: isCoverUrlUpdated ? null : undefined,
         genreId: updateBook.genreId,
         translations: updateBook.translations
           ? {
-              upsert: this.translationUpsertInputs(
-                bookId,
-                updateBook.translations,
-              ),
-            }
+            upsert: this.translationUpsertInputs(
+              bookId,
+              updateBook.translations,
+            ),
+          }
           : undefined,
       },
       select: adminBookSelect,
     });
+
+    if (isCoverUrlUpdated && currentBook.coverKey) {
+      await this.s3Service.deleteBookCover(currentBook.coverKey);
+    }
+
     return this.toAdminBook(book);
   }
 
