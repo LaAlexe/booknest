@@ -25,8 +25,8 @@ import { S3Module } from './s3/s3.module';
         NODE_ENV: Joi.string()
           .valid('development', 'test', 'production')
           .default('development'),
-	AWS_REGION: Joi.string().required(),
-	S3_BUCKET_NAME: Joi.string().required(),
+        AWS_REGION: Joi.string().required(),
+        S3_BUCKET_NAME: Joi.string().required(),
       }),
     }),
     DatabaseModule,
@@ -36,7 +36,7 @@ import { S3Module } from './s3/s3.module';
     AdminAuthModule,
     AdminBooksModule,
     AdminReservationsModule,
-    S3Module
+    S3Module,
   ],
   controllers: [HealthController],
 })

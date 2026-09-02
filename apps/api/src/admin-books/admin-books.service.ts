@@ -121,11 +121,11 @@ export class AdminBooksService {
         genreId: updateBook.genreId,
         translations: updateBook.translations
           ? {
-            upsert: this.translationUpsertInputs(
-              bookId,
-              updateBook.translations,
-            ),
-          }
+              upsert: this.translationUpsertInputs(
+                bookId,
+                updateBook.translations,
+              ),
+            }
           : undefined,
       },
       select: adminBookSelect,
